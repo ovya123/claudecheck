@@ -24,13 +24,13 @@ export const Route = createFileRoute("/teacher/sessions")({
 function Sessions() {
   const { session, students } = useAppState();
   const [form, setForm] = useState({ title: "", subject: "", notes: "" });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Partial<Record<"title" | "subject" | "notes", string>>>({});
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const errs: Record<string, string> = {};
+    const errs: Partial<Record<"title" | "subject" | "notes", string>> = {};
     if (form.title.trim().length < 3) errs.title = "Give the lesson a title (at least 3 characters).";
     if (!form.subject.trim()) errs.subject = "Add a subject.";
     if (form.notes.length > 4000) errs.notes = "Notes must be under 4000 characters.";
