@@ -45,11 +45,12 @@ export function LangChip({ lang }: { lang: DetectedLanguage }) {
 
 export function StatCard({ label, value, hint, icon: Icon, tone = "primary" }: { label: string; value: string | number; hint?: string; icon: React.ComponentType<{ className?: string }>; tone?: "primary" | "sky" | "alert" | "success" }) {
   const tones = { primary: "bg-primary-soft text-primary", sky: "bg-sky-soft text-sky", alert: "bg-alert-soft text-alert-foreground", success: "bg-success-soft text-success" };
+  const wash = { primary: "from-primary-soft/70", sky: "from-sky-soft/80", alert: "from-alert-soft/80", success: "from-success-soft/80" };
   return (
-    <div className="surface p-5">
+    <div className={cn("surface bg-gradient-to-br to-card to-60% p-5", wash[tone])}>
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{label}</p>
-        <span className={cn("grid h-8 w-8 place-items-center rounded-lg", tones[tone])}><Icon className="h-4 w-4" /></span>
+        <span className={cn("grid h-9 w-9 place-items-center rounded-xl shadow-soft", tones[tone])}><Icon className="h-4 w-4" /></span>
       </div>
       <p className="mt-3 font-display text-3xl font-semibold">{value}</p>
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}

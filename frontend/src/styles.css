@@ -110,6 +110,12 @@
   }
   body {
     background-color: var(--color-background);
+    /* Soft colour wash so pages aren't flat beige: teal top-left, sky top-right, warm amber low. */
+    background-image:
+      radial-gradient(60rem 40rem at -10% -10%, oklch(0.56 0.1 185 / 0.08), transparent 60%),
+      radial-gradient(50rem 35rem at 110% 0%, oklch(0.62 0.11 245 / 0.07), transparent 60%),
+      radial-gradient(60rem 40rem at 50% 120%, oklch(0.74 0.15 70 / 0.06), transparent 60%);
+    background-attachment: fixed;
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -126,9 +132,23 @@
 
 @utility surface {
   background-color: var(--color-card);
-  border: 1px solid var(--color-border);
+  border: 1px solid oklch(0.24 0.05 262 / 0.07);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-soft);
+}
+
+/* Highlighter stroke behind a word (homepage hero). */
+@utility marker {
+  background-image: linear-gradient(transparent 62%, oklch(0.74 0.15 70 / 0.35) 62%, oklch(0.74 0.15 70 / 0.35) 92%, transparent 92%);
+  padding: 0 0.08em;
+}
+
+/* Blurred colour blob used for glows behind hero content. */
+@utility glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(64px);
+  pointer-events: none;
 }
 
 @utility dot-grid {

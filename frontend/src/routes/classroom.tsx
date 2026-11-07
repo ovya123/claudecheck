@@ -62,7 +62,7 @@ function Classroom() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 border-b bg-background/85 backdrop-blur">
+      <header className="sticky top-0 z-20 border-b bg-card/80 shadow-soft backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
           <Logo />
           {state.session.status === "live" && <span className="hidden items-center gap-1.5 rounded-full bg-success-soft px-2.5 py-1 text-xs font-semibold text-success sm:flex"><span className="live-dot" />{t(lang, "live")}</span>}
@@ -76,7 +76,8 @@ function Classroom() {
 
       <main className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
-          <article className="surface p-6 sm:p-8">
+          <article className="surface relative overflow-hidden p-6 sm:p-8">
+            <span className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-primary via-sky to-alert" aria-hidden />
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">{t(lang, "lesson")} · {state.session.subject}</p>
             <h1 className="mt-2 font-display text-3xl font-semibold">{state.session.title}</h1>
             <p className="mt-3 inline-flex items-center gap-2 rounded-lg bg-sky-soft px-3 py-1.5 text-sm"><span className="text-muted-foreground">{t(lang, "currentTopic")}:</span> <b>{lesson?.topic ?? state.session.subject}</b></p>
