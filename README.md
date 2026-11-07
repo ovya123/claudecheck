@@ -1,8 +1,10 @@
-# ClassBridge Backend (Python / FastAPI)
+# ClassBridge
+
+Backend: Python / FastAPI (this folder). Frontend: React + TanStack Start (`frontend/`).
 
 > Different languages. Different learning speeds. One inclusive classroom.
 
-FastAPI + SQLAlchemy (SQLite locally, Supabase Postgres in production) + Gemini or OpenAI.
+Backend: FastAPI + SQLAlchemy (SQLite locally, Supabase Postgres in production) + Gemini or OpenAI.
 
 ```
 Student questions (en / hi / fr) ──► AI answer in student's language  (+ English translation stored)
@@ -19,24 +21,37 @@ Pre/post understanding check ──► teacher sees % correct and improvement
 
 ## Run it
 
+You need two terminals: one for the backend (Python) and one for the frontend (website).
+
+**Terminal 1 — backend** (from the repository root):
 ```bash
-cd classbridge-backend
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env        # add GEMINI_API_KEY (or OPENAI_API_KEY + AI_PROVIDER=openai)
 uvicorn app.main:app --reload --port 8000
 ```
 
+**Terminal 2 — frontend** (needs Node.js 20+):
+```bash
+cd frontend
+npm install
+cp .env.example .env        # VITE_API_URL=http://localhost:8000
+npm run dev
+```
+Open the address it prints (e.g. http://localhost:8080). Teacher pages are under `/teacher`,
+students join at `/join`. Each browser tab can be a different student, so you can demo several
+students from one laptop. Leave `VITE_API_URL` empty to run the built-in sample classroom with no backend.
+
 - Interactive API docs: http://localhost:8000/docs
-- Tests (offline, mock AI): `pytest`
-- Rehearse the whole demo with real AI: `python scripts/demo.py`
+- Backend tests (offline, mock AI): `pytest`
+- Rehearse the whole demo from the command line with real AI: `python scripts/demo.py`
 
 **Supabase:** set `DATABASE_URL` to the project's Postgres connection string. Tables are created
 automatically on startup.
 
-**Deploy:** any Python host (Render, Railway, Fly.io). Start command:
-`uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Set the same env vars there and set `CORS_ORIGINS`
-to the Vercel frontend URL.
+**Deploy:** backend on any Python host (Render, Railway, Fly.io) with start command
+`uvicorn app.main:app --host 0.0.0.0 --port $PORT` and the same env vars. Frontend on Vercel/Lovable
+with `VITE_API_URL` set to the backend's URL.
 
 ## Auth (hackathon-simple)
 
@@ -60,9 +75,10 @@ All bodies are JSON. Full schemas are at `/docs`.
 | GET | `/api/teacher/classrooms/{id}/questions` | | `[{id, text, language, english_translation, concept, created_at}]` |
 | POST | `/api/teacher/classrooms/{id}/analyze` | | `{analyzed_question_count, misconceptions[], unclustered_question_ids}` |
 | GET | `/api/teacher/classrooms/{id}/misconceptions` | | `misconceptions[]` |
-| POST | `/api/teacher/classrooms/{id}/misconceptions/{mid}/approve` | `{intervention_index}` | activity (all languages + answer key) |
+| POST | `/api/teacher/classrooms/{id}/misconceptions/{mid}/approve` | `{intervention_index}` | draft activity (all languages + answer key) |
 | POST | `/api/teacher/classrooms/{id}/misconceptions/{mid}/dismiss` | | misconception |
 | GET | `/api/teacher/classrooms/{id}/activities` | | `activities[]` |
+| POST | `/api/teacher/classrooms/{id}/activities/{aid}/share` | | activity (students can now see it) |
 | POST | `/api/teacher/classrooms/{id}/activities/{aid}/close` | | activity |
 | GET | `/api/teacher/classrooms/{id}/activities/{aid}/results` | | `{pre, post, improvement_points, needs_more_support, student_count}` |
 | GET | `/api/teacher/classrooms/{id}/dashboard` | | everything above in one call (poll every 3–5 s) |
@@ -92,10 +108,10 @@ A misconception looks like:
 | POST | `/api/student/questions` | `{text, simpler?}` | `{id, text, language, answer, created_at}` |
 | GET | `/api/student/questions` | | my questions + answers |
 | POST | `/api/student/explain` | `{concept, simpler?}` | `{explanation, example, language}` |
-| GET | `/api/student/activities` | | `[{id, template, params, title, explanation, interaction_prompt, quiz_question, quiz_options, answered_phases}]` |
+| GET | `/api/student/activities` | | `[{id, template, params, title, explanation, interaction_prompt, quiz_question, quiz_options, quiz_correct_index, quiz_explanation, answered_phases}]` |
 | POST | `/api/student/activities/{aid}/responses` | `{answer_index, phase: "pre"\|"post"}` | `{correct, correct_index, explanation}` |
 
-Student activity views are already localized and never include the answer key.
+Student activity views are already localized. Only activities the teacher has shared are returned.
 
 ### Interactive templates (`GET /api/meta`)
 The frontend builds one component per template. The AI only selects the template and fills in its
@@ -135,4 +151,8 @@ app/
   ai/mock.py         offline canned provider for tests
 scripts/demo.py      end-to-end demo rehearsal
 tests/               pytest flow tests
+frontend/            React website (teacher + student portals)
+  src/services/api.ts      real backend client: maps backend data to the UI's types
+  src/services/mockApi.ts  what the screens call; forwards to api.ts when VITE_API_URL is set
+  src/lib/session.ts       teacher/student tokens (teacher: localStorage, student: per-tab)
 ```

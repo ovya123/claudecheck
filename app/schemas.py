@@ -149,6 +149,8 @@ class ActivityStudentView(BaseModel):
     interaction_prompt: str
     quiz_question: str
     quiz_options: list[str]
+    quiz_correct_index: int
+    quiz_explanation: str
     answered_phases: list[str]
     created_at: datetime
 

@@ -141,7 +141,7 @@ def explain(
 
 @router.get("/student/activities", response_model=list[schemas.ActivityStudentView])
 def my_activities(student: Student = Depends(get_student), db: Session = Depends(get_db)):
-    """Active mini-lessons, localized to the student's language. Correct answers are not revealed."""
+    """Shared mini-lessons, localized to the student's language (includes the answer key for instant feedback)."""
     acts = db.scalars(select(Activity).where(
         Activity.classroom_id == student.classroom_id, Activity.status == "active"
     ).order_by(Activity.id.desc())).all()
@@ -159,6 +159,8 @@ def my_activities(student: Student = Depends(get_student), db: Session = Depends
             interaction_prompt=content.get("interaction_prompt", ""),
             quiz_question=_loc(a.quiz.get("question", {}), lang),
             quiz_options=[_loc(o, lang) for o in a.quiz.get("options", [])],
+            quiz_correct_index=a.quiz.get("correct_index", 0),
+            quiz_explanation=_loc(a.quiz.get("explanation", {}), lang),
             answered_phases=sorted(p for (aid, p) in answered if aid == a.id),
             created_at=a.created_at,
         ))
@@ -177,7 +179,7 @@ def answer_quiz(
     if a is None or a.classroom_id != student.classroom_id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Activity not found")
     if a.status != "active":
-        raise HTTPException(status.HTTP_409_CONFLICT, "This activity is closed")
+        raise HTTPException(status.HTTP_409_CONFLICT, "This activity is not open")
     options = a.quiz.get("options", [])
     if body.answer_index >= len(options):
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "answer_index out of range")

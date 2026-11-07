@@ -63,6 +63,7 @@ m = analysis["misconceptions"][0]
 act = ok(c.post(f"/api/teacher/classrooms/{cid}/misconceptions/{m['id']}/approve",
                 json={"intervention_index": 0}, headers=T))
 show("Generated mini-lesson", act)
+ok(c.post(f"/api/teacher/classrooms/{cid}/activities/{act['id']}/share", headers=T))
 
 for lang, h in students.items():
     view = ok(c.get("/api/student/activities", headers=h))[0]

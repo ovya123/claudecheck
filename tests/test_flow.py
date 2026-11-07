@@ -67,10 +67,17 @@ def test_full_classroom_flow(client):
     # Re-analysis with no new questions -> 409
     assert client.post(f"/api/teacher/classrooms/{cid}/analyze", headers=T).status_code == 409
 
-    # 8. Students see it localized, without the answer key; answer pre + post
+    # Draft: students can't see it until the teacher shares it
+    assert act["status"] == "draft"
+    assert client.get("/api/student/activities", headers=students["hi"]).json() == []
+    r = client.post(f"/api/teacher/classrooms/{cid}/activities/{act['id']}/share", headers=T)
+    assert r.json()["status"] == "active"
+
+    # 8. Students see it localized; answer pre + post
     hi_act = client.get("/api/student/activities", headers=students["hi"]).json()[0]
     assert hi_act["quiz_question"] == "कौन-सी भिन्न बड़ी है?"
-    assert "correct_index" not in hi_act
+    assert hi_act["quiz_correct_index"] == 1
+    assert hi_act["quiz_explanation"].startswith("तिहाई")
 
     aid = act["id"]
     for lang in students:  # pre-check: everyone wrong
@@ -92,6 +99,7 @@ def test_full_classroom_flow(client):
     assert res["post"]["option_counts"] == [1, 2]
 
     dash = client.get(f"/api/teacher/classrooms/{cid}/dashboard", headers=T).json()
+    assert len(dash["students"]) == 3
     assert dash["student_count"] == 3 and dash["questions_by_language"] == {"en": 1, "hi": 1, "fr": 1}
 
 

@@ -215,6 +215,7 @@ def approve_intervention(
         classroom_id=classroom.id, misconception_id=m.id, template=out.template, params=out.params,
         content={k: v.model_dump() for k, v in out.content.items()},
         quiz=out.quiz.model_dump(),
+        status="draft",  # teacher previews it, then shares it with the class
     )
     m.status = "approved"
     db.add_all([activity, m])
@@ -243,6 +244,19 @@ def dismiss_misconception(
 def list_activities(classroom: Classroom = Depends(get_teacher_classroom), db: Session = Depends(get_db)):
     acts = db.scalars(select(Activity).where(Activity.classroom_id == classroom.id).order_by(Activity.id)).all()
     return [_activity_view(a) for a in acts]
+
+
+@router.post(
+    "/teacher/classrooms/{classroom_id}/activities/{activity_id}/share", response_model=schemas.ActivityTeacherView
+)
+def share_activity(
+    activity_id: int, classroom: Classroom = Depends(get_teacher_classroom), db: Session = Depends(get_db)
+):
+    """Make a draft mini-lesson visible to students."""
+    a = _get_owned(db, Activity, activity_id, classroom)
+    a.status = "active"
+    db.commit()
+    return _activity_view(a)
 
 
 @router.post(
@@ -278,6 +292,10 @@ def dashboard(classroom: Classroom = Depends(get_teacher_classroom), db: Session
     return {
         "classroom": schemas.ClassroomTeacher.model_validate(classroom, from_attributes=True),
         "student_count": len(students),
+        "students": [
+            {"id": s.id, "display_name": s.display_name, "language": s.language, "created_at": s.created_at}
+            for s in students
+        ],
         "students_by_language": dict(Counter(s.language for s in students)),
         "question_count": len(questions),
         "questions_by_language": dict(Counter(q.language for q in questions)),

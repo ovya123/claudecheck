@@ -108,7 +108,7 @@ class Activity(Base):
     params: Mapped[dict] = mapped_column(JSON, default=dict)
     content: Mapped[dict] = mapped_column(JSON, default=dict)  # {lang: {title, explanation, interaction_prompt}}
     quiz: Mapped[dict] = mapped_column(JSON, default=dict)  # {question:{lang}, options:[{lang}], correct_index, explanation:{lang}}
-    status: Mapped[str] = mapped_column(String(16), default="active")  # active | closed
+    status: Mapped[str] = mapped_column(String(16), default="draft")  # draft | active (shared) | closed
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
