@@ -22,6 +22,10 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-soft: var(--primary-soft);
+  --color-primary-deep: var(--primary-deep);
+  --color-crust: var(--crust);
+  --color-cheese: var(--cheese);
+  --color-tomato: var(--tomato);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-sky: var(--sky);
@@ -56,6 +60,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --shadow-soft: var(--shadow-soft-v);
   --shadow-lift: var(--shadow-lift-v);
+  --shadow-glow: var(--shadow-glow-v);
 }
 
 :root {
@@ -69,6 +74,10 @@
   --primary: oklch(0.56 0.1 185);
   --primary-foreground: oklch(0.99 0.005 185);
   --primary-soft: oklch(0.94 0.035 185);
+  --primary-deep: oklch(0.47 0.09 192);
+  --crust: oklch(0.7 0.12 62);
+  --cheese: oklch(0.95 0.07 92);
+  --tomato: oklch(0.64 0.18 35);
   --secondary: oklch(0.955 0.012 85);
   --secondary-foreground: oklch(0.24 0.05 262);
   --sky: oklch(0.62 0.11 245);
@@ -101,6 +110,7 @@
   --sidebar-border: oklch(0.91 0.012 85);
   --sidebar-ring: oklch(0.56 0.1 185);
   --shadow-soft-v: 0 1px 2px oklch(0.24 0.05 262 / 0.04), 0 4px 16px -4px oklch(0.24 0.05 262 / 0.06);
+  --shadow-glow-v: 0 8px 20px -8px oklch(0.56 0.1 185 / 0.65);
   --shadow-lift-v: 0 2px 4px oklch(0.24 0.05 262 / 0.04), 0 18px 40px -12px oklch(0.24 0.05 262 / 0.16);
 }
 
@@ -167,6 +177,14 @@
   border-radius: 9999px;
   background: var(--color-success);
   animation: live-pulse 1.8s infinite;
+}
+
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@utility float {
+  animation: float-y 5s ease-in-out infinite;
 }
 
 @keyframes radar-sweep {

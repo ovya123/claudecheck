@@ -74,12 +74,28 @@ function Classroom() {
         </div>
       </header>
 
+      <section className="mx-auto max-w-6xl px-4 pt-6">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-deep via-primary to-sky p-6 text-primary-foreground shadow-lift sm:p-7">
+          <span className="glow -right-10 -top-16 h-56 w-56 bg-alert/40" aria-hidden />
+          <div className="dot-grid absolute inset-0 opacity-25 invert" aria-hidden />
+          <div className="relative flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-primary-foreground/80">{t(lang, "hello")}, {student.name} 👋</p>
+              <h1 className="mt-1 font-display text-2xl font-semibold sm:text-3xl">{state.session.title}</h1>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="rounded-full bg-background/15 px-3 py-1 font-medium backdrop-blur">{state.session.subject}</span>
+              {shared.length > 0 && <a href="#act-h" className="rounded-full bg-alert px-3 py-1 font-semibold text-foreground shadow-soft transition-transform hover:-translate-y-0.5">✨ {t(lang, "sharedActivity")}</a>}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <main className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
           <article className="surface relative overflow-hidden p-6 sm:p-8">
             <span className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-primary via-sky to-alert" aria-hidden />
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">{t(lang, "lesson")} · {state.session.subject}</p>
-            <h1 className="mt-2 font-display text-3xl font-semibold">{state.session.title}</h1>
+            <h2 className="mt-2 font-display text-3xl font-semibold">{t(lang, "lesson")}</h2>
             <p className="mt-3 inline-flex items-center gap-2 rounded-lg bg-sky-soft px-3 py-1.5 text-sm"><span className="text-muted-foreground">{t(lang, "currentTopic")}:</span> <b>{lesson?.topic ?? state.session.subject}</b></p>
             <div className="mt-6 max-w-prose space-y-6 text-[17px] leading-relaxed">
               {lessonError && <p className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive"><AlertCircle className="h-4 w-4" />{lessonError}</p>}
@@ -120,7 +136,7 @@ function Classroom() {
             {mine.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">{t(lang, "noQuestions")}</p> : (
               <ul className="mt-3 space-y-2">
                 {mine.map((q) => (
-                  <li key={q.id} className="rounded-lg border p-3">
+                  <li key={q.id} className="rounded-xl border bg-muted/30 p-3.5">
                     <p className="whitespace-pre-wrap text-sm">{q.text}</p>
                     {q.answer && <p className="mt-2 whitespace-pre-line rounded-md bg-sky-soft p-2.5 text-sm leading-relaxed">{q.answer}</p>}
                     <p className={cn("mt-2 inline-flex items-center gap-1 text-xs font-medium", q.status === "answered" ? "text-success" : q.status === "analyzed" ? "text-sky" : "text-alert-foreground")}>
@@ -159,7 +175,7 @@ function QuestionComposer({ studentId, studentName }: { studentId: string; stude
     }
   }
   return (
-    <form onSubmit={submit} className="surface p-6">
+    <form onSubmit={submit} className="surface bg-gradient-to-b from-alert-soft/70 to-card to-45% p-6">
       <h2 className="flex items-center gap-2 font-semibold"><Lightbulb className="h-4 w-4 text-alert" /> {t(lang, "askPrivately")}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{t(lang, "askHint")}</p>
       <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} placeholder={t(lang, "placeholder")} aria-label={t(lang, "askPrivately")}
@@ -190,7 +206,7 @@ function ExplanationPanel() {
 
   return (
     <section className="surface overflow-hidden" aria-live="polite">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-primary-soft/50 px-6 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-gradient-to-r from-primary-soft to-sky-soft/60 px-6 py-4">
         <h2 className="flex items-center gap-2 font-semibold"><Wand2 className="h-4 w-4 text-primary" /> {t(lang, "explanation")}</h2>
         {!LIVE && <span className="text-[11px] text-muted-foreground">{t(lang, "sample")}</span>}
       </div>
@@ -206,7 +222,7 @@ function ExplanationPanel() {
           <ol className="space-y-3">
             {lines.map((l, i) => (
               <li key={i} className="flex gap-3 text-[15px] leading-relaxed animate-in fade-in slide-in-from-bottom-1" style={{ animationDelay: `${i * 60}ms` }}>
-                <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-sky-soft text-xs font-semibold text-sky">{i + 1}</span>
+                <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary to-sky text-xs font-semibold text-primary-foreground shadow-soft">{i + 1}</span>
                 <span>{l.split(/(\d+\/\d+)/).map((part, j) => /\d+\/\d+/.test(part) ? <span key={j} className="rounded bg-muted px-1 font-mono font-semibold">{part}</span> : part)}</span>
               </li>
             ))}

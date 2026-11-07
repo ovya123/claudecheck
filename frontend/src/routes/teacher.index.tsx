@@ -46,19 +46,23 @@ function Overview() {
         <Button asChild><Link to="/teacher/sessions"><Plus className="h-4 w-4" /> Create new session</Link></Button>
       </div>
 
-      <div className="surface relative overflow-hidden p-6">
-        <div className="dot-grid absolute inset-0 opacity-60 [mask-image:linear-gradient(to_left,black,transparent_60%)]" />
-        <div className="relative flex flex-wrap items-center justify-between gap-4">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-foreground via-foreground to-primary-deep p-6 text-background shadow-lift sm:p-8">
+        <span className="glow -right-10 -top-20 h-64 w-64 bg-primary/50" aria-hidden />
+        <span className="glow bottom-[-5rem] left-1/4 h-48 w-48 bg-sky/25" aria-hidden />
+        <div className="relative flex flex-wrap items-center justify-between gap-6">
           <div>
-            <div className="flex items-center gap-2 text-sm font-medium">
-              {session.status === "live" ? <><span className="live-dot" /> Live now</> : <span className="text-muted-foreground">Session {session.status}</span>}
+            <div className="flex items-center gap-2 text-sm font-medium text-background/80">
+              {session.status === "live" ? <><span className="live-dot" /> Live now</> : <span className="capitalize">Session {session.status}</span>}
             </div>
-            <h2 className="mt-2 font-display text-2xl font-semibold">{session.title}</h2>
-            <p className="text-muted-foreground">{session.subject}</p>
+            <h2 className="mt-2 font-display text-3xl font-semibold">{session.title}</h2>
+            <p className="text-background/70">{session.subject}</p>
           </div>
-          <div className="flex items-center gap-6">
-            <div><p className="text-xs uppercase tracking-wider text-muted-foreground">Join code</p><p className="font-mono text-2xl font-semibold tracking-[0.2em]">{session.joinCode}</p></div>
-            <Button asChild variant="outline" className="bg-card"><Link to="/teacher/live">Open session <ArrowRight className="h-4 w-4" /></Link></Button>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="rounded-xl border border-dashed border-background/30 bg-background/10 px-5 py-3 text-center backdrop-blur">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-background/60">Join code</p>
+              <p className="font-mono text-3xl font-semibold tracking-[0.25em]">{session.joinCode}</p>
+            </div>
+            <Button asChild variant="secondary" size="lg"><Link to="/teacher/live">Open session <ArrowRight className="h-4 w-4" /></Link></Button>
           </div>
         </div>
       </div>

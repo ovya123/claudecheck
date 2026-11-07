@@ -53,12 +53,31 @@ function Join() {
   }
 
   return (
-    <div className="relative grid min-h-screen place-items-center px-4 py-10">
+    <div className="grid min-h-screen lg:grid-cols-[1fr_1.1fr]">
+      <aside className="relative hidden flex-col justify-between overflow-hidden bg-foreground p-12 text-background lg:flex">
+        <span className="glow -left-20 top-10 h-80 w-80 bg-primary/45" aria-hidden />
+        <span className="glow -bottom-24 right-0 h-72 w-72 bg-sky/30" aria-hidden />
+        <div className="dot-grid absolute inset-0 opacity-30 invert" aria-hidden />
+        <Logo className="relative text-background [&>span:first-child]:bg-primary [&>span:first-child]:text-primary-foreground" />
+        <div className="relative space-y-4">
+          {[["Hello!", "English", "-rotate-2"], ["नमस्ते!", "हिन्दी", "translate-x-10 rotate-1"], ["Bonjour !", "Français", "translate-x-4 -rotate-1"]].map(([word, lang, tilt], i) => (
+            <div key={lang} className={cn("float w-fit rounded-2xl rounded-bl-sm bg-background/10 px-5 py-3 backdrop-blur", tilt)} style={{ animationDelay: `${i * 0.8}s` }}>
+              <p className="font-display text-3xl font-semibold">{word}</p>
+              <p className="text-xs uppercase tracking-wider text-background/60">{lang}</p>
+            </div>
+          ))}
+        </div>
+        <div className="relative">
+          <h2 className="font-display text-3xl font-semibold leading-tight">Learn in your language.<br />Ask without fear.</h2>
+          <p className="mt-2 max-w-sm text-background/70">Your questions are private: only your teacher sees them, and never with your classmates watching.</p>
+        </div>
+      </aside>
+      <div className="relative grid place-items-center px-4 py-10">
       <div className="dot-grid absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
       <div className="relative w-full max-w-md">
         <span className="glow -z-10 -left-16 top-24 h-64 w-64 bg-primary/25" aria-hidden />
         <span className="glow -z-10 -right-16 bottom-10 h-56 w-56 bg-alert/20" aria-hidden />
-        <div className="mb-8 flex justify-center"><Logo /></div>
+        <div className="mb-8 flex justify-center lg:hidden"><Logo /></div>
         <form onSubmit={onSubmit} className="surface space-y-6 border-t-4 border-t-primary p-7 shadow-lift" noValidate>
           <div className="text-center">
             <h1 className="font-display text-2xl font-semibold">Join your class</h1>
@@ -79,7 +98,7 @@ function Join() {
             <div className="grid grid-cols-3 gap-2">
               {LANGUAGES.map((l) => (
                 <button type="button" key={l.code} onClick={() => setL(l.code)} aria-pressed={chosen === l.code}
-                  className={cn("rounded-lg border px-2 py-3 text-center transition-colors", chosen === l.code ? "border-primary bg-primary-soft" : "hover:bg-muted")}>
+                  className={cn("rounded-xl border px-2 py-3 text-center transition-all", chosen === l.code ? "border-primary bg-primary-soft shadow-glow ring-1 ring-primary" : "bg-card hover:-translate-y-0.5 hover:bg-muted")}>
                   <span className="block font-semibold">{l.native}</span><span className="text-xs text-muted-foreground">{l.label}</span>
                 </button>
               ))}
@@ -89,6 +108,7 @@ function Join() {
           {error && <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive" role="alert">{error}</p>}
           <Button type="submit" size="lg" className="w-full" disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />} Join classroom</Button>
         </form>
+      </div>
       </div>
     </div>
   );
