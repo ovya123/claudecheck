@@ -20,6 +20,8 @@ const dict = {
     quiz: "Quick check", done: "Activity complete", tryAgain: "Try again", chars: "characters",
     leave: "Leave", hello: "Hi", sample: "Sample explanation",
     whole: "Same-size whole", pieceOf: "One piece of", compare: "Compare", isBigger: "is bigger than",
+    family: "Share with your family", familyHint: "Give this code to a parent or guardian. They enter it in the parent portal, and your teacher checks it's really them before they can see your work.",
+    familyWaiting: "Waiting for your teacher", familyVerified: "Can see your work", familyRejected: "Not approved", copied: "Copied",
   },
   hi: {
     live: "लाइव", lesson: "पाठ", currentTopic: "वर्तमान विषय", notes: "शिक्षक के नोट्स",
@@ -33,6 +35,8 @@ const dict = {
     quiz: "छोटी जाँच", done: "गतिविधि पूरी हुई", tryAgain: "फिर कोशिश करें", chars: "अक्षर",
     leave: "बाहर जाएँ", hello: "नमस्ते", sample: "नमूना व्याख्या",
     whole: "एक जैसा पूरा", pieceOf: "एक टुकड़ा", compare: "तुलना", isBigger: "बड़ा है",
+    family: "अपने परिवार के साथ साझा करें", familyHint: "यह कोड अपने माता-पिता या अभिभावक को दें। वे इसे अभिभावक पोर्टल में डालेंगे, और आपका काम देखने से पहले आपके शिक्षक पुष्टि करेंगे कि वे सच में वही हैं।",
+    familyWaiting: "शिक्षक की पुष्टि बाकी", familyVerified: "आपका काम देख सकते हैं", familyRejected: "स्वीकार नहीं हुआ", copied: "कॉपी हो गया",
   },
   fr: {
     live: "En direct", lesson: "Leçon", currentTopic: "Sujet actuel", notes: "Notes de l'enseignant",
@@ -46,6 +50,8 @@ const dict = {
     quiz: "Petite vérification", done: "Activité terminée", tryAgain: "Réessayer", chars: "caractères",
     leave: "Quitter", hello: "Salut", sample: "Explication exemple",
     whole: "Tout de même taille", pieceOf: "Une part de", compare: "Comparer", isBigger: "est plus grand que",
+    family: "Partager avec ta famille", familyHint: "Donne ce code à un parent ou tuteur. Il le saisit dans l'espace parents, et ton enseignant vérifie que c'est bien lui avant qu'il puisse voir ton travail.",
+    familyWaiting: "En attente de l'enseignant", familyVerified: "Peut voir ton travail", familyRejected: "Refusé", copied: "Copié",
   },
 } satisfies Record<Lang, Record<string, string>>;
 

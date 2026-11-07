@@ -31,7 +31,19 @@ export type StudentCreds = {
   joinedAt: number;
 };
 
+/** A parent's link to their child, stored on the parent's own device. */
+export type ParentCreds = {
+  parentId: number;
+  token: string;
+  name: string;
+  relation: string;
+  language: Lang;
+  childName: string;
+  classroomTitle: string;
+};
+
 const TEACHER_KEY = "classbridge:live:teacher";
+const PARENT_KEY = "classbridge:live:parent";
 const STUDENT_KEY = "classbridge:live:student";
 
 function read<T>(storage: () => Storage, key: string): T | null {
@@ -56,6 +68,9 @@ export const getTeacherCreds = () => (hasWindow() ? read<TeacherCreds>(local, TE
 export const setTeacherCreds = (c: TeacherCreds | null) => hasWindow() && write(local, TEACHER_KEY, c);
 export const getStudentCreds = () => (hasWindow() ? read<StudentCreds>(sess, STUDENT_KEY) : null);
 export const setStudentCreds = (c: StudentCreds | null) => hasWindow() && write(sess, STUDENT_KEY, c);
+
+export const getParentCreds = () => (hasWindow() ? read<ParentCreds>(local, PARENT_KEY) : null);
+export const setParentCreds = (c: ParentCreds | null) => hasWindow() && write(local, PARENT_KEY, c);
 
 export function emptyState(): AppState {
   return {

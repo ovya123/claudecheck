@@ -1,4 +1,5 @@
 from collections import Counter
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import delete, func, select
@@ -9,6 +10,7 @@ from app.ai.service import AIService, get_ai
 from app.db import get_db
 from app.deps import get_teacher_classroom, lesson_context
 from app.models import (
+    Parent,
     Activity,
     Classroom,
     LessonTranslation,
@@ -77,6 +79,18 @@ def _results(db: Session, classroom: Classroom, a: Activity) -> schemas.Activity
         improvement_points=improvement,
         needs_more_support=post.percent_correct is not None and post.percent_correct < 70,
     )
+
+
+def _family_view(p: Parent) -> schemas.FamilyLinkView:
+    return schemas.FamilyLinkView(
+        id=p.id, name=p.name, relation=p.relation, language=p.language, status=p.status,
+        student_id=p.student_id, student_name=p.student.display_name or f"Student {p.student_id}", created_at=p.created_at,
+    )
+
+
+def _families(db: Session, classroom: Classroom) -> list[schemas.FamilyLinkView]:
+    ps = db.scalars(select(Parent).where(Parent.classroom_id == classroom.id).order_by(Parent.id)).all()
+    return [_family_view(p) for p in ps]
 
 
 def _get_owned(db: Session, model, obj_id: int, classroom: Classroom):
@@ -280,6 +294,32 @@ def activity_results(
     return _results(db, classroom, _get_owned(db, Activity, activity_id, classroom))
 
 
+# ---------- parent verification ----------
+
+@router.get("/teacher/classrooms/{classroom_id}/parents", response_model=list[schemas.FamilyLinkView])
+def list_parents(classroom: Classroom = Depends(get_teacher_classroom), db: Session = Depends(get_db)):
+    """Family members who asked to see a student's work. Pending ones need the teacher's verification."""
+    return _families(db, classroom)
+
+
+def _set_parent_status(db: Session, classroom: Classroom, parent_id: int, new_status: str) -> schemas.FamilyLinkView:
+    p = _get_owned(db, Parent, parent_id, classroom)
+    p.status = new_status
+    p.verified_at = datetime.now(timezone.utc) if new_status == "verified" else None
+    db.commit()
+    return _family_view(p)
+
+
+@router.post("/teacher/classrooms/{classroom_id}/parents/{parent_id}/verify", response_model=schemas.FamilyLinkView)
+def verify_parent(parent_id: int, classroom: Classroom = Depends(get_teacher_classroom), db: Session = Depends(get_db)):
+    return _set_parent_status(db, classroom, parent_id, "verified")
+
+
+@router.post("/teacher/classrooms/{classroom_id}/parents/{parent_id}/reject", response_model=schemas.FamilyLinkView)
+def reject_parent(parent_id: int, classroom: Classroom = Depends(get_teacher_classroom), db: Session = Depends(get_db)):
+    return _set_parent_status(db, classroom, parent_id, "rejected")
+
+
 @router.get("/teacher/classrooms/{classroom_id}/dashboard")
 def dashboard(classroom: Classroom = Depends(get_teacher_classroom), db: Session = Depends(get_db)):
     """Everything the live teacher dashboard needs in one call (poll this every few seconds)."""
@@ -304,4 +344,5 @@ def dashboard(classroom: Classroom = Depends(get_teacher_classroom), db: Session
         "activities": [
             {"activity": _activity_view(a), "results": _results(db, classroom, a)} for a in acts
         ],
+        "parents": _families(db, classroom),
     }

@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Globe2, GraduationCap, Lock, MessageSquareText, Radar, School, Shapes } from "lucide-react";
+import { ArrowRight, Globe2, GraduationCap, Heart, Lock, MessageSquareText, Radar, School, Shapes } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DemoBadge, LangChip, Logo } from "@/components/common";
 import { RadarVisual } from "@/components/radar/MisconceptionCard";
 import { LIVE } from "@/lib/config";
+import { ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -25,6 +26,8 @@ const features = [
   { icon: Lock, tile: "bg-primary-soft text-primary", title: "Private questions", body: "Ask in any language or script — including Hinglish. Only the teacher sees it, exactly as typed." },
   { icon: Radar, tile: "bg-alert-soft text-alert-foreground", title: "Misconception Radar", body: "Questions in different languages are grouped by the underlying misunderstanding, not by wording." },
   { icon: Shapes, tile: "bg-success-soft text-success", title: "Interactive explanations", body: "Teachers share hands-on mini-lessons with a quick check, in each student's own language." },
+  { icon: Heart, tile: "bg-alert-soft text-alert-foreground", title: "Families included", body: "Verified parents see their child's questions, answers and activities in their own language, with tips to help at home." },
+  { icon: ShieldCheck, tile: "bg-primary-soft text-primary-deep", title: "Teacher-verified access", body: "A parent links with their child's private family code, and the teacher confirms them before anything is shared." },
 ];
 
 function Landing() {
@@ -34,6 +37,7 @@ function Landing() {
         <Logo />
         <nav className="flex items-center gap-1 text-sm">
           <a href="#how" className="hidden rounded-md px-3 py-2 text-muted-foreground hover:text-foreground sm:inline">How it works</a>
+          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex"><Link to="/parent">For parents</Link></Button>
           <Button asChild variant="ghost" size="sm"><Link to="/join">Join a class</Link></Button>
           <Button asChild size="sm"><Link to="/teacher">Teacher portal</Link></Button>
         </nav>
@@ -57,6 +61,7 @@ function Landing() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg" className="h-12 px-6"><Link to="/teacher"><School className="h-4 w-4" /> I'm a Teacher</Link></Button>
               <Button asChild size="lg" variant="outline" className="h-12 bg-card px-6"><Link to="/join"><GraduationCap className="h-4 w-4" /> I'm a Student</Link></Button>
+              <Button asChild size="lg" variant="ghost" className="h-12 px-5"><Link to="/parent"><Heart className="h-4 w-4 text-alert" /> I'm a Parent</Link></Button>
             </div>
             <div className="mt-8 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <span>Learn in</span>
@@ -104,7 +109,7 @@ function Landing() {
       <section className="mx-auto max-w-6xl px-5 py-20">
         <p className="text-sm font-semibold uppercase tracking-wider text-primary">Built for inclusive classrooms</p>
         <h2 className="mt-2 max-w-xl font-display text-3xl font-semibold sm:text-4xl">Everything a multilingual class needs, in one place.</h2>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2">
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((f) => (
             <div key={f.title} className="surface p-6 transition-all hover:-translate-y-0.5 hover:shadow-lift">
               <span className={cn("grid h-11 w-11 place-items-center rounded-xl", f.tile)}><f.icon className="h-5 w-5" /></span>

@@ -189,3 +189,87 @@ class LessonView(BaseModel):
     language: str
     simplified: bool
     notes: str
+
+
+# ---------- parent portal ----------
+
+class ParentLinkRequest(BaseModel):
+    family_code: str = Field(min_length=4, max_length=12, examples=["K7MP2QXA"])
+    name: str = Field(min_length=1, max_length=80, examples=["Sunita"])
+    relation: str = Field(default="Parent", max_length=40, examples=["Mother"])
+    language: LangCode = "en"
+
+
+class ParentUpdate(BaseModel):
+    language: LangCode
+
+
+class ParentStatus(BaseModel):
+    parent_id: int
+    parent_token: str | None = None  # only returned once, when linking
+    name: str
+    relation: str
+    language: str
+    status: str  # pending | verified | rejected
+    child_name: str
+    classroom_title: str
+
+
+class ParentQuestionView(BaseModel):
+    id: int
+    original: str
+    original_language: str
+    translated: str
+    answer: str
+    created_at: datetime
+
+
+class ParentActivityView(BaseModel):
+    id: int
+    template: str
+    params: dict[str, Any]
+    title: str
+    explanation: str
+    quiz_question: str
+    quiz_options: list[str]
+    correct_index: int
+    child_answer_index: int | None
+    child_correct: bool | None
+    created_at: datetime
+
+
+class ParentOverview(BaseModel):
+    language: str
+    child_name: str
+    child_language: str
+    classroom_title: str
+    classroom_topic: str
+    lesson_notes: str
+    questions: list[ParentQuestionView]
+    activities: list[ParentActivityView]
+    stats: dict[str, int]
+
+
+class ParentTips(BaseModel):
+    language: str
+    summary: str
+    tips: list[str]
+    conversation_starters: list[str]
+
+
+class FamilyLinkView(BaseModel):
+    """A parent link as the teacher (or the student) sees it."""
+
+    id: int
+    name: str
+    relation: str
+    language: str
+    status: str
+    student_id: int
+    student_name: str
+    created_at: datetime
+
+
+class StudentFamily(BaseModel):
+    family_code: str
+    parents: list[FamilyLinkView]

@@ -5,13 +5,13 @@
  */
 import { useEffect, useState } from "react";
 import type {
-  AppState, ClassroomSession, DetectedLanguage, Lang, LearningActivity, Misconception, QuizResponse, Student, StudentQuestion,
+  AppState, ClassroomSession, DetectedLanguage, Lang, LearningActivity, Misconception, ParentLink, QuizResponse, Student, StudentQuestion,
 } from "@/types";
 import { API_URL, LIVE } from "@/lib/config";
 import { getState, setState } from "@/lib/store";
 import {
-  emptyState, getStudentCreds, getTeacherCreds, setStudentCreds, setTeacherCreds, studentBaseState, teacherSession,
-  type StudentCreds, type TeacherCreds,
+  emptyState, getParentCreds, getStudentCreds, getTeacherCreds, setParentCreds, setStudentCreds, setTeacherCreds,
+  studentBaseState, teacherSession, type ParentCreds, type StudentCreds, type TeacherCreds,
 } from "@/lib/session";
 import { lessonContent, type ExplanationLevel } from "@/i18n";
 
@@ -80,13 +80,21 @@ type BStudentActivity = {
   quiz_question: string; quiz_options: string[]; quiz_correct_index: number; quiz_explanation: string; created_at: string;
 };
 type BPhase = { responses: number; correct: number; percent_correct: number | null; option_counts: number[] };
+type BFamilyLink = { id: number; name: string; relation: string; language: string; status: string; student_id: number; student_name: string; created_at: string };
 type BDashboard = {
   classroom: { id: number; code: string; title: string; topic: string; lesson_notes: string; created_at: string };
   students: { id: number; display_name: string | null; language: string; created_at: string }[];
   questions: BQuestion[];
   misconceptions: BMisconception[];
   activities: { activity: BActivity; results: { pre: BPhase; post: BPhase } }[];
+  parents?: BFamilyLink[];
 };
+
+const mapFamilyLink = (p: BFamilyLink): ParentLink => ({
+  id: String(p.id), name: p.name, relation: p.relation, language: asLang(p.language),
+  status: p.status === "verified" || p.status === "rejected" ? p.status : "pending",
+  studentName: p.student_name, createdAt: ts(p.created_at),
+});
 
 // ---------------------------------------------------------------- mapping helpers
 
@@ -214,7 +222,9 @@ function teacherStateFrom(d: BDashboard, c: TeacherCreds): AppState {
     id: String(s.id), name: s.display_name || `Student ${i + 1}`, language: asLang(s.language), joinedAt: ts(s.created_at),
   }));
 
-  return { session: teacherSession(c), students, questions, misconceptions, activities, quizResponses };
+  const parents = (d.parents ?? []).map(mapFamilyLink);
+
+  return { session: teacherSession(c), students, questions, misconceptions, activities, quizResponses, parents };
 }
 
 // ---------------------------------------------------------------- teacher
@@ -295,6 +305,17 @@ export async function shareActivity(activityId: string): Promise<void> {
   const c = requireTeacher();
   await request(`/api/teacher/classrooms/${c.classroomId}/activities/${activityId}/share`, { method: "POST", headers: teacherHeaders(c) });
   setState((s) => ({ ...s, activities: s.activities.map((a) => (a.id === activityId ? { ...a, status: "shared", sharedAt: Date.now() } : a)) }));
+}
+
+/** Teacher confirms (or rejects) that a family member really is the student's parent/guardian. */
+export async function setParentVerification(parentId: string, verified: boolean): Promise<void> {
+  const c = requireTeacher();
+  const r = await request<BFamilyLink>(
+    `/api/teacher/classrooms/${c.classroomId}/parents/${parentId}/${verified ? "verify" : "reject"}`,
+    { method: "POST", headers: teacherHeaders(c) },
+  );
+  const link = mapFamilyLink(r);
+  setState((s) => ({ ...s, parents: (s.parents ?? []).map((p) => (p.id === link.id ? link : p)) }));
 }
 
 // ---------------------------------------------------------------- student
@@ -423,6 +444,127 @@ export async function getLessonTranslation(lang: Lang): Promise<Lesson> {
   const lesson: Lesson = { topic: r.topic || c.title, sections: r.notes ? [{ heading: "", body: r.notes }] : [] };
   lessonCache.set(key, lesson);
   return lesson;
+}
+
+export type StudentFamily = { familyCode: string; parents: ParentLink[] };
+
+export async function getStudentFamily(): Promise<StudentFamily> {
+  const c = requireStudent();
+  const r = await request<{ family_code: string; parents: BFamilyLink[] }>("/api/student/family", { headers: studentHeaders(c) });
+  return { familyCode: r.family_code, parents: r.parents.map(mapFamilyLink) };
+}
+
+// ---------------------------------------------------------------- parent
+
+export type ParentStatus = "pending" | "verified" | "rejected";
+type BParentStatus = {
+  parent_id: number; parent_token: string | null; name: string; relation: string; language: string; status: string;
+  child_name: string; classroom_title: string;
+};
+export type ParentQuestion = { id: number; original: string; originalLanguage: string; translated: string; answer: string; createdAt: number };
+export type ParentActivity = {
+  id: number; title: string; explanation: string; quizQuestion: string; quizOptions: string[]; correctIndex: number;
+  childAnswerIndex: number | null; childCorrect: boolean | null; lesson: LearningActivity;
+};
+export type ParentOverview = {
+  language: Lang; childName: string; classroomTitle: string; classroomTopic: string; lessonNotes: string;
+  questions: ParentQuestion[]; activities: ParentActivity[];
+  stats: { questions: number; activities: number; activities_done: number; correct: number };
+};
+export type ParentTips = { summary: string; tips: string[]; conversationStarters: string[] };
+
+const parentHeaders = (c: ParentCreds) => ({ "X-Parent-Token": c.token });
+function requireParent(): ParentCreds {
+  const c = getParentCreds();
+  if (!c) throw new Error("Link to your child first.");
+  return c;
+}
+
+function saveParentStatus(r: BParentStatus, token: string): ParentCreds {
+  const c: ParentCreds = {
+    parentId: r.parent_id, token, name: r.name, relation: r.relation, language: asLang(r.language),
+    childName: r.child_name, classroomTitle: r.classroom_title,
+  };
+  setParentCreds(c);
+  return c;
+}
+
+export async function linkParent(input: { familyCode: string; name: string; relation: string; language: Lang }): Promise<ParentStatus> {
+  try {
+    const r = await request<BParentStatus>("/api/parents/link", {
+      method: "POST",
+      body: { family_code: input.familyCode, name: input.name, relation: input.relation, language: input.language },
+    });
+    saveParentStatus(r, r.parent_token ?? "");
+    return r.status as ParentStatus;
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) throw new Error("No student found with that family code.");
+    throw e;
+  }
+}
+
+/** Current verification status (also refreshes the stored child/class names). */
+export async function getParentStatus(): Promise<ParentStatus | null> {
+  const c = getParentCreds();
+  if (!c) return null;
+  try {
+    const r = await request<BParentStatus>("/api/parent/me", { headers: parentHeaders(c) });
+    saveParentStatus(r, c.token);
+    return r.status as ParentStatus;
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 401) { setParentCreds(null); return null; }
+    throw e;
+  }
+}
+
+export async function setParentLanguage(lang: Lang): Promise<void> {
+  const c = requireParent();
+  await request("/api/parent/me", { method: "PATCH", headers: parentHeaders(c), body: { language: lang } });
+  setParentCreds({ ...c, language: lang });
+}
+
+export function signOutParent() {
+  setParentCreds(null);
+}
+
+type BParentOverview = {
+  language: string; child_name: string; classroom_title: string; classroom_topic: string; lesson_notes: string;
+  questions: { id: number; original: string; original_language: string; translated: string; answer: string; created_at: string }[];
+  activities: {
+    id: number; template: string; params: Record<string, unknown>; title: string; explanation: string; quiz_question: string;
+    quiz_options: string[]; correct_index: number; child_answer_index: number | null; child_correct: boolean | null; created_at: string;
+  }[];
+  stats: ParentOverview["stats"];
+};
+
+export async function getParentOverview(): Promise<ParentOverview> {
+  const c = requireParent();
+  const r = await request<BParentOverview>("/api/parent/overview", { headers: parentHeaders(c) });
+  const lang = asLang(r.language);
+  return {
+    language: lang, childName: r.child_name, classroomTitle: r.classroom_title, classroomTopic: r.classroom_topic,
+    lessonNotes: r.lesson_notes, stats: r.stats,
+    questions: r.questions.map((q) => ({
+      id: q.id, original: q.original, originalLanguage: q.original_language, translated: q.translated, answer: q.answer, createdAt: ts(q.created_at),
+    })),
+    activities: r.activities.map((a) => ({
+      id: a.id, title: a.title, explanation: a.explanation, quizQuestion: a.quiz_question, quizOptions: a.quiz_options,
+      correctIndex: a.correct_index, childAnswerIndex: a.child_answer_index, childCorrect: a.child_correct,
+      lesson: mapStudentActivity({
+        id: a.id, template: a.template, params: a.params, title: a.title, explanation: a.explanation, interaction_prompt: "",
+        quiz_question: a.quiz_question, quiz_options: a.quiz_options, quiz_correct_index: a.correct_index, quiz_explanation: "",
+        created_at: a.created_at,
+      }, "parent", lang),
+    })),
+  };
+}
+
+export async function getParentTips(): Promise<ParentTips> {
+  const c = requireParent();
+  const r = await request<{ summary: string; tips: string[]; conversation_starters: string[] }>("/api/parent/tips", {
+    method: "POST", headers: parentHeaders(c),
+  });
+  return { summary: r.summary, tips: r.tips, conversationStarters: r.conversation_starters };
 }
 
 // ---------------------------------------------------------------- hooks

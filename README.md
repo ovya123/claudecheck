@@ -39,7 +39,7 @@ cp .env.example .env        # VITE_API_URL=http://localhost:8000
 npm run dev
 ```
 Open the address it prints (e.g. http://localhost:8080). Teacher pages are under `/teacher`,
-students join at `/join`. Each browser tab can be a different student, so you can demo several
+students join at `/join`, parents go to `/parent`. Each browser tab can be a different student, so you can demo several
 students from one laptop. Leave `VITE_API_URL` empty to run the built-in sample classroom with no backend.
 
 - Interactive API docs: http://localhost:8000/docs
@@ -113,6 +113,23 @@ A misconception looks like:
 
 Student activity views are already localized. Only activities the teacher has shared are returned.
 
+### Parent / guardian portal
+Parents see their child's work translated into their own language, but **only after the teacher verifies them**:
+
+1. The student's class page shows a private **family code** (`GET /api/student/family`, which also lists who has asked for access and their status).
+2. The parent opens `/parent`, enters the code, their name, relation and language → `POST /api/parents/link` creates a **pending** link and returns `parent_token` (send as `X-Parent-Token`).
+3. The teacher sees the request in **Families** (`GET /api/teacher/classrooms/{id}/parents`, also in the dashboard) and calls `.../parents/{pid}/verify` or `.../reject`.
+4. Verified parents only:
+
+| Method | Path | Returns |
+|---|---|---|
+| GET | `/api/parent/me` | `{status: pending\|verified\|rejected, name, relation, language, child_name, classroom_title}` |
+| PATCH | `/api/parent/me` | change `{language}` |
+| GET | `/api/parent/overview` | lesson notes, the child's questions + AI answers, shared activities + quiz results, all in the parent's language |
+| POST | `/api/parent/tips` | AI "how to help at home" tips and conversation starters in the parent's language |
+
+Pending or rejected parents get `403` from the overview and tips. Translations of questions and answers are cached, so each text is translated only once per language.
+
 ### Interactive templates (`GET /api/meta`)
 The frontend builds one component per template. The AI only selects the template and fills in its
 validated `params`:
@@ -144,7 +161,9 @@ app/
   deps.py            token auth
   templates.py       interactive template registry + param validation
   routers/teacher.py teacher portal + misconception radar
-  routers/student.py student portal
+  routers/student.py student portal (+ family code)
+  routers/parent.py  parent portal: link, verification status, translated overview, tips
+  translation.py     cached AI translation (lesson notes, questions/answers)
   ai/providers.py    Gemini / OpenAI (REST) / mock
   ai/prompts.py      system prompts
   ai/service.py      structured AI tasks with validation

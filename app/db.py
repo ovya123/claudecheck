@@ -43,3 +43,19 @@ def init_db() -> None:
     from app import models  # noqa: F401  (register tables)
 
     Base.metadata.create_all(bind=engine)
+    _add_missing_columns()
+
+
+def _add_missing_columns() -> None:
+    """Tiny migration for databases created before the parent feature (create_all never alters tables)."""
+    from sqlalchemy import inspect, select, text, update
+
+    from app.models import Student, new_family_code
+
+    cols = {c["name"] for c in inspect(engine).get_columns("students")}
+    if "family_code" in cols:
+        return
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE students ADD COLUMN family_code VARCHAR(12)"))
+        for (sid,) in conn.execute(select(Student.id)).all():
+            conn.execute(update(Student).where(Student.id == sid).values(family_code=new_family_code()))

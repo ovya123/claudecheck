@@ -14,6 +14,10 @@ def new_class_code() -> str:
     return "".join(secrets.choice(_CODE_ALPHABET) for _ in range(6))
 
 
+def new_family_code() -> str:
+    return "".join(secrets.choice(_CODE_ALPHABET) for _ in range(8))
+
+
 def new_token() -> str:
     return secrets.token_urlsafe(24)
 
@@ -60,6 +64,8 @@ class Student(Base):
     display_name: Mapped[str | None] = mapped_column(String(80), nullable=True)
     language: Mapped[str] = mapped_column(String(8), default="en")
     token: Mapped[str] = mapped_column(String(64), unique=True, index=True, default=new_token)
+    # Private code the student gives to a parent/guardian so they can request access.
+    family_code: Mapped[str | None] = mapped_column(String(12), unique=True, index=True, nullable=True, default=new_family_code)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     classroom: Mapped[Classroom] = relationship(back_populates="students")
@@ -123,3 +129,34 @@ class QuizResponse(Base):
     answer_index: Mapped[int] = mapped_column(Integer)
     correct: Mapped[bool] = mapped_column(Boolean)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Parent(Base):
+    """A parent/guardian linked to one student. Must be verified by the teacher before seeing anything."""
+
+    __tablename__ = "parents"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    student_id: Mapped[int] = mapped_column(ForeignKey("students.id", ondelete="CASCADE"), index=True)
+    classroom_id: Mapped[int] = mapped_column(ForeignKey("classrooms.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(80))
+    relation: Mapped[str] = mapped_column(String(40), default="Parent")  # Mother, Father, Guardian…
+    language: Mapped[str] = mapped_column(String(8), default="en")
+    token: Mapped[str] = mapped_column(String(64), unique=True, index=True, default=new_token)
+    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending | verified | rejected
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    student: Mapped[Student] = relationship()
+
+
+class TranslationCache(Base):
+    """AI translations of short texts (student questions/answers) for parents, keyed by source hash."""
+
+    __tablename__ = "translation_cache"
+    __table_args__ = (UniqueConstraint("source_hash", "language"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source_hash: Mapped[str] = mapped_column(String(64), index=True)
+    language: Mapped[str] = mapped_column(String(8))
+    text: Mapped[str] = mapped_column(Text)
