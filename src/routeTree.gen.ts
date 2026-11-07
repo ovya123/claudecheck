@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClassroomRouteImport } from './routes/classroom'
+import { Route as JoinRouteImport } from './routes/join'
 import { Route as TeacherRouteImport } from './routes/teacher'
 import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
 import { Route as TeacherActivitiesRouteImport } from './routes/teacher.activities'
@@ -21,6 +23,16 @@ import { Route as TeacherSessionsRouteImport } from './routes/teacher.sessions'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClassroomRoute = ClassroomRouteImport.update({
+  id: '/classroom',
+  path: '/classroom',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinRoute = JoinRouteImport.update({
+  id: '/join',
+  path: '/join',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeacherRoute = TeacherRouteImport.update({
@@ -61,6 +73,8 @@ const TeacherSessionsRoute = TeacherSessionsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/classroom': typeof ClassroomRoute
+  '/join': typeof JoinRoute
   '/teacher': typeof TeacherRouteWithChildren
   '/teacher/activities': typeof TeacherActivitiesRoute
   '/teacher/insights': typeof TeacherInsightsRoute
@@ -71,6 +85,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/classroom': typeof ClassroomRoute
+  '/join': typeof JoinRoute
   '/teacher/activities': typeof TeacherActivitiesRoute
   '/teacher/insights': typeof TeacherInsightsRoute
   '/teacher/live': typeof TeacherLiveRoute
@@ -81,6 +97,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/classroom': typeof ClassroomRoute
+  '/join': typeof JoinRoute
   '/teacher': typeof TeacherRouteWithChildren
   '/teacher/activities': typeof TeacherActivitiesRoute
   '/teacher/insights': typeof TeacherInsightsRoute
@@ -93,6 +111,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/classroom'
+    | '/join'
     | '/teacher'
     | '/teacher/activities'
     | '/teacher/insights'
@@ -103,6 +123,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/classroom'
+    | '/join'
     | '/teacher/activities'
     | '/teacher/insights'
     | '/teacher/live'
@@ -112,6 +134,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/classroom'
+    | '/join'
     | '/teacher'
     | '/teacher/activities'
     | '/teacher/insights'
@@ -123,6 +147,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ClassroomRoute: typeof ClassroomRoute
+  JoinRoute: typeof JoinRoute
   TeacherRoute: typeof TeacherRouteWithChildren
 }
 
@@ -133,6 +159,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/classroom': {
+      id: '/classroom'
+      path: '/classroom'
+      fullPath: '/classroom'
+      preLoaderRoute: typeof ClassroomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join': {
+      id: '/join'
+      path: '/join'
+      fullPath: '/join'
+      preLoaderRoute: typeof JoinRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teacher': {
@@ -210,6 +250,8 @@ const TeacherRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ClassroomRoute: ClassroomRoute,
+  JoinRoute: JoinRoute,
   TeacherRoute: TeacherRouteWithChildren,
 }
 export const routeTree = rootRouteImport

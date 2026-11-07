@@ -164,17 +164,16 @@ function ExplanationPanel() {
   const [level, setLevel] = useState<ExplanationLevel>("standard");
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [lines, setLines] = useState<string[]>([]);
-  const [failOnce, setFailOnce] = useState(false);
 
-  const load = useCallback(async (lv: ExplanationLevel, fail = false) => {
+  const load = useCallback(async (lv: ExplanationLevel) => {
     setStatus("loading");
     try {
-      setLines(await generateExplanation({ lang, level: lv, fail }));
+      setLines(await generateExplanation({ lang, level: lv }));
       setStatus("ready");
     } catch { setStatus("error"); }
   }, [lang]);
 
-  useEffect(() => { load(level, failOnce); if (failOnce) setFailOnce(false); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [level, lang]);
+  useEffect(() => { load(level); }, [level, load]);
 
   return (
     <section className="surface overflow-hidden" aria-live="polite">
