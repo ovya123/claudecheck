@@ -458,8 +458,11 @@ export async function submitQuizResponse(input: { activityId: string; selectedIn
   };
 }
 
+// Split into sentences without regex lookbehind, which Safari before 16.4 cannot even parse
+// (a parse error there breaks every page that imports this file).
 const sentences = (text: string) =>
-  text.split(/(?<=[.!?।])\s+/).map((s) => s.trim()).filter(Boolean);
+  // A sentence ends at . ! ? or । followed by a space (so "0.5" or "1.2" stay whole).
+  (text.match(/(?:[^.!?।]|[.!?।]+(?!\s|$))+(?:[.!?।]+|$)/g) ?? [text]).map((s) => s.trim()).filter(Boolean);
 
 export async function generateExplanation(input: { lang: Lang; level: ExplanationLevel }): Promise<string[]> {
   await ensureStudentLanguage(input.lang);
