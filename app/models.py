@@ -160,3 +160,30 @@ class TranslationCache(Base):
     source_hash: Mapped[str] = mapped_column(String(64), index=True)
     language: Mapped[str] = mapped_column(String(8))
     text: Mapped[str] = mapped_column(Text)
+
+
+class Assignment(Base):
+    """Homework, quiz, test or project set by the teacher; graded per student."""
+
+    __tablename__ = "assignments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    classroom_id: Mapped[int] = mapped_column(ForeignKey("classrooms.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(16), default="homework")  # homework | quiz | test | project
+    title: Mapped[str] = mapped_column(String(200))
+    instructions: Mapped[str] = mapped_column(Text, default="")
+    due_date: Mapped[str | None] = mapped_column(String(10), nullable=True)  # YYYY-MM-DD
+    max_points: Mapped[float] = mapped_column(Float, default=10)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Grade(Base):
+    __tablename__ = "grades"
+    __table_args__ = (UniqueConstraint("assignment_id", "student_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    assignment_id: Mapped[int] = mapped_column(ForeignKey("assignments.id", ondelete="CASCADE"), index=True)
+    student_id: Mapped[int] = mapped_column(ForeignKey("students.id", ondelete="CASCADE"), index=True)
+    score: Mapped[float | None] = mapped_column(Float, nullable=True)  # None = not graded / not handed in
+    feedback: Mapped[str] = mapped_column(Text, default="")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

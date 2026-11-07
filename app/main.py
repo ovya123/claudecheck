@@ -6,9 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.ai.providers import AIError
-from app.config import SUPPORTED_LANGUAGES, get_settings
+from app.config import PARENT_LANGUAGES, SUPPORTED_LANGUAGES, get_settings
 from app.db import init_db
-from app.routers import parent, student, teacher
+from app.routers import assignments, parent, student, teacher
 from app.templates import template_catalog
 
 logging.basicConfig(level=logging.INFO)
@@ -51,9 +51,10 @@ def health():
 
 @app.get("/api/meta", tags=["meta"])
 def meta():
-    return {"languages": SUPPORTED_LANGUAGES, "templates": template_catalog()}
+    return {"languages": SUPPORTED_LANGUAGES, "parent_languages": PARENT_LANGUAGES, "templates": template_catalog()}
 
 
 app.include_router(teacher.router)
 app.include_router(student.router)
 app.include_router(parent.router)
+app.include_router(assignments.router)

@@ -5,7 +5,8 @@
  */
 import { useEffect, useState } from "react";
 import type {
-  AppState, ClassroomSession, DetectedLanguage, Lang, LearningActivity, Misconception, ParentLink, QuizResponse, Student, StudentQuestion,
+  AppState, Assignment, AssignmentKind, ClassroomSession, DetectedLanguage, Lang, LearningActivity, Misconception, ParentLink,
+  QuizResponse, Student, StudentQuestion,
 } from "@/types";
 import { API_URL, LIVE } from "@/lib/config";
 import { getState, setState } from "@/lib/store";
@@ -88,10 +89,24 @@ type BDashboard = {
   misconceptions: BMisconception[];
   activities: { activity: BActivity; results: { pre: BPhase; post: BPhase } }[];
   parents?: BFamilyLink[];
+  assignments?: BAssignment[];
 };
 
+type BAssignment = {
+  id: number; kind: string; title: string; instructions: string; due_date: string | null; max_points: number;
+  graded_count: number; average_percent: number | null;
+  grades: { student_id: number; student_name: string; score: number | null; feedback: string }[];
+};
+const KINDS: AssignmentKind[] = ["homework", "quiz", "test", "project"];
+const mapAssignment = (a: BAssignment): Assignment => ({
+  id: String(a.id), kind: KINDS.includes(a.kind as AssignmentKind) ? (a.kind as AssignmentKind) : "homework",
+  title: a.title, instructions: a.instructions, dueDate: a.due_date, maxPoints: a.max_points,
+  averagePercent: a.average_percent, gradedCount: a.graded_count,
+  grades: a.grades.map((g) => ({ studentId: String(g.student_id), studentName: g.student_name, score: g.score, feedback: g.feedback })),
+});
+
 const mapFamilyLink = (p: BFamilyLink): ParentLink => ({
-  id: String(p.id), name: p.name, relation: p.relation, language: asLang(p.language),
+  id: String(p.id), name: p.name, relation: p.relation, language: p.language,
   status: p.status === "verified" || p.status === "rejected" ? p.status : "pending",
   studentName: p.student_name, createdAt: ts(p.created_at),
 });
@@ -224,7 +239,9 @@ function teacherStateFrom(d: BDashboard, c: TeacherCreds): AppState {
 
   const parents = (d.parents ?? []).map(mapFamilyLink);
 
-  return { session: teacherSession(c), students, questions, misconceptions, activities, quizResponses, parents };
+  const assignments = (d.assignments ?? []).map(mapAssignment);
+
+  return { session: teacherSession(c), students, questions, misconceptions, activities, quizResponses, parents, assignments };
 }
 
 // ---------------------------------------------------------------- teacher
@@ -316,6 +333,34 @@ export async function setParentVerification(parentId: string, verified: boolean)
   );
   const link = mapFamilyLink(r);
   setState((s) => ({ ...s, parents: (s.parents ?? []).map((p) => (p.id === link.id ? link : p)) }));
+}
+
+export async function createAssignment(input: {
+  kind: AssignmentKind; title: string; instructions: string; dueDate: string | null; maxPoints: number;
+}): Promise<Assignment> {
+  const c = requireTeacher();
+  const a = mapAssignment(await request<BAssignment>(`/api/teacher/classrooms/${c.classroomId}/assignments`, {
+    method: "POST", headers: teacherHeaders(c),
+    body: { kind: input.kind, title: input.title, instructions: input.instructions, due_date: input.dueDate, max_points: input.maxPoints },
+  }));
+  setState((s) => ({ ...s, assignments: [...(s.assignments ?? []).filter((x) => x.id !== a.id), a] }));
+  return a;
+}
+
+export async function saveGrades(assignmentId: string, grades: { studentId: string; score: number | null; feedback: string }[]): Promise<Assignment> {
+  const c = requireTeacher();
+  const a = mapAssignment(await request<BAssignment>(`/api/teacher/classrooms/${c.classroomId}/assignments/${assignmentId}/grades`, {
+    method: "PUT", headers: teacherHeaders(c),
+    body: grades.map((g) => ({ student_id: Number(g.studentId), score: g.score, feedback: g.feedback })),
+  }));
+  setState((s) => ({ ...s, assignments: (s.assignments ?? []).map((x) => (x.id === a.id ? a : x)) }));
+  return a;
+}
+
+export async function deleteAssignment(assignmentId: string): Promise<void> {
+  const c = requireTeacher();
+  await request(`/api/teacher/classrooms/${c.classroomId}/assignments/${assignmentId}`, { method: "DELETE", headers: teacherHeaders(c) });
+  setState((s) => ({ ...s, assignments: (s.assignments ?? []).filter((x) => x.id !== assignmentId) }));
 }
 
 // ---------------------------------------------------------------- student
@@ -466,12 +511,19 @@ export type ParentActivity = {
   id: number; title: string; explanation: string; quizQuestion: string; quizOptions: string[]; correctIndex: number;
   childAnswerIndex: number | null; childCorrect: boolean | null; lesson: LearningActivity;
 };
-export type ParentOverview = {
-  language: Lang; childName: string; classroomTitle: string; classroomTopic: string; lessonNotes: string;
-  questions: ParentQuestion[]; activities: ParentActivity[];
-  stats: { questions: number; activities: number; activities_done: number; correct: number };
+export type ParentAssignment = {
+  id: number; kind: AssignmentKind; title: string; instructions: string; dueDate: string | null; maxPoints: number;
+  score: number | null; percent: number | null; feedback: string;
 };
-export type ParentTips = { summary: string; tips: string[]; conversationStarters: string[] };
+export type ClassMistake = { id: number; title: string; description: string; childAffected: boolean };
+export type ParentOverview = {
+  language: string; childName: string; classroomTitle: string; classroomTopic: string; lessonNotes: string;
+  questions: ParentQuestion[]; activities: ParentActivity[];
+  assignments: ParentAssignment[]; gradeSummary: Record<string, number | null>; classMistakes: ClassMistake[];
+  stats: { questions: number; activities: number; activities_done: number; correct: number; assignments: number; graded: number };
+};
+export type WeakArea = { area: string; evidence: string; howToHelp: string };
+export type ParentTips = { summary: string; weakAreas: WeakArea[]; tips: string[]; conversationStarters: string[] };
 
 const parentHeaders = (c: ParentCreds) => ({ "X-Parent-Token": c.token });
 function requireParent(): ParentCreds {
@@ -482,14 +534,14 @@ function requireParent(): ParentCreds {
 
 function saveParentStatus(r: BParentStatus, token: string): ParentCreds {
   const c: ParentCreds = {
-    parentId: r.parent_id, token, name: r.name, relation: r.relation, language: asLang(r.language),
+    parentId: r.parent_id, token, name: r.name, relation: r.relation, language: r.language,
     childName: r.child_name, classroomTitle: r.classroom_title,
   };
   setParentCreds(c);
   return c;
 }
 
-export async function linkParent(input: { familyCode: string; name: string; relation: string; language: Lang }): Promise<ParentStatus> {
+export async function linkParent(input: { familyCode: string; name: string; relation: string; language: string }): Promise<ParentStatus> {
   try {
     const r = await request<BParentStatus>("/api/parents/link", {
       method: "POST",
@@ -517,7 +569,7 @@ export async function getParentStatus(): Promise<ParentStatus | null> {
   }
 }
 
-export async function setParentLanguage(lang: Lang): Promise<void> {
+export async function setParentLanguage(lang: string): Promise<void> {
   const c = requireParent();
   await request("/api/parent/me", { method: "PATCH", headers: parentHeaders(c), body: { language: lang } });
   setParentCreds({ ...c, language: lang });
@@ -534,16 +586,25 @@ type BParentOverview = {
     id: number; template: string; params: Record<string, unknown>; title: string; explanation: string; quiz_question: string;
     quiz_options: string[]; correct_index: number; child_answer_index: number | null; child_correct: boolean | null; created_at: string;
   }[];
+  assignments: { id: number; kind: string; title: string; instructions: string; due_date: string | null; max_points: number;
+    score: number | null; percent: number | null; feedback: string }[];
+  grade_summary: Record<string, number | null>;
+  class_mistakes: { id: number; title: string; description: string; child_affected: boolean }[];
   stats: ParentOverview["stats"];
 };
 
 export async function getParentOverview(): Promise<ParentOverview> {
   const c = requireParent();
   const r = await request<BParentOverview>("/api/parent/overview", { headers: parentHeaders(c) });
-  const lang = asLang(r.language);
+  const lang = asLang(r.language); // the pizza widget's own labels exist in en/hi/fr only
   return {
-    language: lang, childName: r.child_name, classroomTitle: r.classroom_title, classroomTopic: r.classroom_topic,
-    lessonNotes: r.lesson_notes, stats: r.stats,
+    language: r.language, childName: r.child_name, classroomTitle: r.classroom_title, classroomTopic: r.classroom_topic,
+    lessonNotes: r.lesson_notes, stats: r.stats, gradeSummary: r.grade_summary,
+    assignments: r.assignments.map((a) => ({
+      id: a.id, kind: KINDS.includes(a.kind as AssignmentKind) ? (a.kind as AssignmentKind) : "homework", title: a.title,
+      instructions: a.instructions, dueDate: a.due_date, maxPoints: a.max_points, score: a.score, percent: a.percent, feedback: a.feedback,
+    })),
+    classMistakes: r.class_mistakes.map((m) => ({ id: m.id, title: m.title, description: m.description, childAffected: m.child_affected })),
     questions: r.questions.map((q) => ({
       id: q.id, original: q.original, originalLanguage: q.original_language, translated: q.translated, answer: q.answer, createdAt: ts(q.created_at),
     })),
@@ -561,10 +622,18 @@ export async function getParentOverview(): Promise<ParentOverview> {
 
 export async function getParentTips(): Promise<ParentTips> {
   const c = requireParent();
-  const r = await request<{ summary: string; tips: string[]; conversation_starters: string[] }>("/api/parent/tips", {
-    method: "POST", headers: parentHeaders(c),
-  });
-  return { summary: r.summary, tips: r.tips, conversationStarters: r.conversation_starters };
+  const r = await request<{
+    summary: string; tips: string[]; conversation_starters: string[]; weak_areas: { area: string; evidence: string; how_to_help: string }[];
+  }>("/api/parent/tips", { method: "POST", headers: parentHeaders(c) });
+  return {
+    summary: r.summary, tips: r.tips, conversationStarters: r.conversation_starters,
+    weakAreas: r.weak_areas.map((w) => ({ area: w.area, evidence: w.evidence, howToHelp: w.how_to_help })),
+  };
+}
+
+/** Translate the parent portal's labels for languages without built-in text. */
+export async function translateUiStrings(language: string, texts: string[]): Promise<string[]> {
+  return request<string[]>("/api/parent/ui-strings", { method: "POST", body: { language, texts } });
 }
 
 // ---------------------------------------------------------------- hooks

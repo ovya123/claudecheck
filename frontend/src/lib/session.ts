@@ -37,7 +37,7 @@ export type ParentCreds = {
   token: string;
   name: string;
   relation: string;
-  language: Lang;
+  language: string;
   childName: string;
   classroomTitle: string;
 };

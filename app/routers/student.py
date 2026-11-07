@@ -181,7 +181,7 @@ def answer_quiz(
         raise HTTPException(status.HTTP_409_CONFLICT, "This activity is not open")
     options = a.quiz.get("options", [])
     if body.answer_index >= len(options):
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "answer_index out of range")
+        raise HTTPException(422, "answer_index out of range")
     correct_index = a.quiz["correct_index"]
     r = QuizResponse(
         activity_id=a.id, student_id=student.id, phase=body.phase,

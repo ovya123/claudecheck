@@ -9,6 +9,27 @@ SUPPORTED_LANGUAGES: dict[str, str] = {
 }
 
 
+# Parents can read in many more languages than the classroom supports: the AI translates everything for them.
+PARENT_LANGUAGES: dict[str, str] = {
+    **SUPPORTED_LANGUAGES,
+    "es": "Spanish",
+    "ar": "Arabic",
+    "zh": "Chinese (Simplified)",
+    "pa": "Punjabi (Gurmukhi script)",
+    "ta": "Tamil",
+    "ur": "Urdu",
+    "bn": "Bengali",
+    "pt": "Portuguese",
+    "tl": "Tagalog",
+    "vi": "Vietnamese",
+    "ko": "Korean",
+}
+
+
+def language_name(code: str) -> str:
+    return PARENT_LANGUAGES.get(code, code)
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
