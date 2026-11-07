@@ -66,7 +66,7 @@ export function createDemoState(): AppState {
       ["Amélie", "fr"], ["Noah", "en"], ["Isha", "hi"], ["Lucas", "fr"], ["Zara", "en"],
       ["Vihaan", "hi"], ["Emma", "en"], ["Arjun", "hi"], ["Inès", "fr"], ["Oliver", "en"],
       ["Diya", "hi"], ["Théo", "fr"], ["Ava", "en"], ["Neel", "hi"],
-    ].map(([name, language], i) => ({ id: `stu-d${i}`, name, language: language as "en", joinedAt: T0 + i * 20000 })),
+    ].map(([name, language], i) => ({ id: `stu-d${i}`, name: name ?? "", language: language as "en", joinedAt: T0 + i * 20000 })),
     questions: [
       q("q1", "Maya", "Why is 1/8 smaller than 1/4?", "English", "m1", 4),
       q("q2", "Aarav", "बड़ा हर होने पर भिन्न छोटी क्यों होती है?", "Hindi", "m1", 6),

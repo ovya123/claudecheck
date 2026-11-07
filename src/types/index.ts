@@ -8,7 +8,7 @@ export type ClassroomSession = {
   joinCode: string;
   status: "draft" | "live" | "ended";
   createdAt: number;
-  startedAt?: number;
+  startedAt?: number | undefined;
 };
 
 export type Student = {
@@ -30,9 +30,9 @@ export type StudentQuestion = {
   text: string;
   detectedLanguage: DetectedLanguage;
   status: "pending" | "analyzed" | "answered";
-  misconceptionId?: string;
+  misconceptionId?: string | undefined;
   createdAt: number;
-  isDemo?: boolean;
+  isDemo?: boolean | undefined;
 };
 
 export type Misconception = {
@@ -57,7 +57,7 @@ export type QuizQuestion = {
 export type LearningActivity = {
   id: string;
   sessionId: string;
-  misconceptionId?: string;
+  misconceptionId?: string | undefined;
   type: "fraction-compare";
   title: Record<Lang, string>;
   /** Denominators compared in the visual, e.g. [4, 8]. */
@@ -66,7 +66,7 @@ export type LearningActivity = {
   instructions: Record<Lang, string>;
   quiz: QuizQuestion;
   status: "draft" | "shared";
-  sharedAt?: number;
+  sharedAt?: number | undefined;
 };
 
 export type QuizResponse = {

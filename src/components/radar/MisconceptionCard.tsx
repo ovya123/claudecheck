@@ -115,8 +115,8 @@ export function RadarVisual({ items }: { items: { label: string; value: number; 
       <g className="radar-sweep"><path d="M100 100 L190 100 A90 90 0 0 0 163.6 36.4 Z" fill="url(#sweep)" /></g>
       {items.map((it, i) => {
         const r = 25 + (it.value / max) * 60;
-        const x = 100 + Math.cos(angles[i]) * (90 - r + 15);
-        const y = 100 + Math.sin(angles[i]) * (90 - r + 15);
+        const x = 100 + Math.cos(angles[i] ?? 0) * (90 - r + 15);
+        const y = 100 + Math.sin(angles[i] ?? 0) * (90 - r + 15);
         const size = 5 + (it.value / max) * 9;
         return (
           <g key={it.label}>
