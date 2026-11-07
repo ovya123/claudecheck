@@ -31,3 +31,4 @@ Open the address it prints. Teacher portal: `/teacher`. Students: `/join` with c
    ```
 3. Create a session at `/teacher/sessions`, then join from other tabs at `/join`. Each tab can be a different student.
 4. Parents: the student's class page shows a family code. A parent enters it at `/parent`, and the teacher verifies them under **Families**.
+5. Grades: set and grade homework, quizzes and tests under **Assignments & Grades**. Verified parents see them, translated into any of 14 languages.

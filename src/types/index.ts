@@ -87,10 +87,26 @@ export type ParentLink = {
   id: string;
   name: string;
   relation: string;
-  language: Lang;
+  /** Any parent language code (parents can read in more languages than students). */
+  language: string;
   status: "pending" | "verified" | "rejected";
   studentName: string;
   createdAt: number;
+};
+
+export type AssignmentKind = "homework" | "quiz" | "test" | "project";
+
+/** Homework/quiz/test with the teacher's gradebook (LIVE mode). */
+export type Assignment = {
+  id: string;
+  kind: AssignmentKind;
+  title: string;
+  instructions: string;
+  dueDate: string | null;
+  maxPoints: number;
+  averagePercent: number | null;
+  gradedCount: number;
+  grades: { studentId: string; studentName: string; score: number | null; feedback: string }[];
 };
 
 export type AppState = {
@@ -101,4 +117,5 @@ export type AppState = {
   activities: LearningActivity[];
   quizResponses: QuizResponse[];
   parents?: ParentLink[] | undefined;
+  assignments?: Assignment[] | undefined;
 };

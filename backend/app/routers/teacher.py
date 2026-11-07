@@ -9,6 +9,7 @@ from app import schemas
 from app.ai.service import AIService, get_ai
 from app.db import get_db
 from app.deps import get_teacher_classroom, lesson_context
+from app.routers.assignments import assignment_views
 from app.models import (
     Parent,
     Activity,
@@ -217,7 +218,7 @@ def approve_intervention(
     """Teacher accepts an intervention -> AI generates a multilingual mini-lesson + understanding check."""
     m = _get_owned(db, Misconception, misconception_id, classroom)
     if body.intervention_index >= len(m.interventions):
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "intervention_index out of range")
+        raise HTTPException(422, "intervention_index out of range")
     intervention = m.interventions[body.intervention_index]
 
     out = ai.generate_activity(
@@ -345,4 +346,5 @@ def dashboard(classroom: Classroom = Depends(get_teacher_classroom), db: Session
             {"activity": _activity_view(a), "results": _results(db, classroom, a)} for a in acts
         ],
         "parents": _families(db, classroom),
+        "assignments": assignment_views(db, classroom),
     }

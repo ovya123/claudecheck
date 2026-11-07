@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
-from app.config import SUPPORTED_LANGUAGES
+from app.config import PARENT_LANGUAGES, SUPPORTED_LANGUAGES
 
 LangCode = Literal["en", "hi", "fr"]
 
@@ -193,15 +193,39 @@ class LessonView(BaseModel):
 
 # ---------- parent portal ----------
 
+def _parent_lang(v: str) -> str:
+    if v not in PARENT_LANGUAGES:
+        raise ValueError(f"language must be one of {sorted(PARENT_LANGUAGES)}")
+    return v
+
+
 class ParentLinkRequest(BaseModel):
     family_code: str = Field(min_length=4, max_length=12, examples=["K7MP2QXA"])
     name: str = Field(min_length=1, max_length=80, examples=["Sunita"])
     relation: str = Field(default="Parent", max_length=40, examples=["Mother"])
-    language: LangCode = "en"
+    language: str = Field(default="en", description="Any code from GET /api/meta parent_languages")
+
+    _lang = field_validator("language")(_parent_lang)
 
 
 class ParentUpdate(BaseModel):
-    language: LangCode
+    language: str
+
+    _lang = field_validator("language")(_parent_lang)
+
+
+class UiTranslateRequest(BaseModel):
+    language: str
+    texts: list[str] = Field(max_length=120)
+
+    _lang = field_validator("language")(_parent_lang)
+
+    @field_validator("texts")
+    @classmethod
+    def _short(cls, v: list[str]) -> list[str]:
+        if any(len(t) > 400 for t in v):
+            raise ValueError("each text must be at most 400 characters")
+        return v
 
 
 class ParentStatus(BaseModel):
@@ -238,6 +262,26 @@ class ParentActivityView(BaseModel):
     created_at: datetime
 
 
+class ParentAssignmentView(BaseModel):
+    id: int
+    kind: str
+    title: str
+    instructions: str
+    due_date: str | None
+    max_points: float
+    score: float | None
+    percent: float | None
+    feedback: str
+    created_at: datetime
+
+
+class ClassMistakeView(BaseModel):
+    id: int
+    title: str
+    description: str
+    child_affected: bool  # the child asked a question reflecting this misconception
+
+
 class ParentOverview(BaseModel):
     language: str
     child_name: str
@@ -247,12 +291,22 @@ class ParentOverview(BaseModel):
     lesson_notes: str
     questions: list[ParentQuestionView]
     activities: list[ParentActivityView]
+    assignments: list[ParentAssignmentView]
+    grade_summary: dict[str, float | None]  # average % per kind + "overall"
+    class_mistakes: list[ClassMistakeView]
     stats: dict[str, int]
+
+
+class WeakArea(BaseModel):
+    area: str
+    evidence: str = ""
+    how_to_help: str = ""
 
 
 class ParentTips(BaseModel):
     language: str
     summary: str
+    weak_areas: list[WeakArea] = []
     tips: list[str]
     conversation_starters: list[str]
 
@@ -273,3 +327,42 @@ class FamilyLinkView(BaseModel):
 class StudentFamily(BaseModel):
     family_code: str
     parents: list[FamilyLinkView]
+
+
+# ---------- assignments & grades (teacher) ----------
+
+AssignmentKind = Literal["homework", "quiz", "test", "project"]
+
+
+class AssignmentCreate(BaseModel):
+    kind: AssignmentKind = "homework"
+    title: str = Field(min_length=1, max_length=200, examples=["Fractions worksheet 1"])
+    instructions: str = Field(default="", max_length=10_000)
+    due_date: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$", examples=["2026-11-14"])
+    max_points: float = Field(default=10, gt=0, le=1000)
+
+
+class GradeIn(BaseModel):
+    student_id: int
+    score: float | None = Field(default=None, ge=0)
+    feedback: str = Field(default="", max_length=2000)
+
+
+class GradeView(BaseModel):
+    student_id: int
+    student_name: str
+    score: float | None
+    feedback: str
+
+
+class AssignmentView(BaseModel):
+    id: int
+    kind: str
+    title: str
+    instructions: str
+    due_date: str | None
+    max_points: float
+    created_at: datetime
+    graded_count: int
+    average_percent: float | None
+    grades: list[GradeView]

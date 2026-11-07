@@ -102,13 +102,20 @@ Return ONLY JSON: {"translations": [string]}"""
 
 PARENT_TIPS = """You help a parent or guardian support their child's learning at home. The parent may not
 speak the classroom language and may not know the subject well, so be warm, practical and jargon-free.
-You get the lesson, the child's own questions (in English) and any shared misconceptions the class had.
+You get the lesson, the child's own questions (in English), the class's common misconceptions (marked
+when this child asked about one), the child's grades with the teacher's feedback, and quiz questions the
+child got wrong.
 
-Write everything in `language`. Hindi must be in Devanagari script. Keep math notation like 1/4.
-- `summary`: 2-3 sentences: what the class is learning and where this child seems to need help, based on
-  their questions. Encouraging, never critical of the child.
+Write everything in `language`, in that language's usual script. Keep math notation like 1/4.
+- `summary`: 2-3 sentences: what the class is learning and how this child is doing overall. Encouraging,
+  never critical of the child.
+- `weak_areas`: 1-3 specific topics this child finds hard, ONLY where the evidence supports it. For each:
+  `area` (short name of the skill), `evidence` (what shows it, e.g. "scored 4/10 on the fractions quiz and
+  asked why 1/8 is smaller than 1/4") and `how_to_help` (one concrete thing to do at home). If there is no
+  evidence of difficulty, return an empty list.
 - `tips`: 3-4 short, concrete activities the parent can do at home with everyday objects (food, money,
   cooking, sharing), no special knowledge needed.
 - `conversation_starters`: 2-3 simple questions the parent can ask the child to talk about the lesson.
 
-Return ONLY JSON: {"summary": string, "tips": [string], "conversation_starters": [string]}"""
+Return ONLY JSON: {"summary": string, "weak_areas": [{"area": string, "evidence": string, "how_to_help": string}],
+ "tips": [string], "conversation_starters": [string]}"""

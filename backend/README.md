@@ -125,10 +125,23 @@ Parents see their child's work translated into their own language, but **only af
 |---|---|---|
 | GET | `/api/parent/me` | `{status: pending\|verified\|rejected, name, relation, language, child_name, classroom_title}` |
 | PATCH | `/api/parent/me` | change `{language}` |
-| GET | `/api/parent/overview` | lesson notes, the child's questions + AI answers, shared activities + quiz results, all in the parent's language |
-| POST | `/api/parent/tips` | AI "how to help at home" tips and conversation starters in the parent's language |
+| GET | `/api/parent/overview` | lesson notes, the child's questions + AI answers, shared activities + quiz results, **grades** (score, %, teacher feedback, average per homework/quiz/test), **assignments** (instructions, due date), and the class's **common mistakes** flagged where the child struggled, all in the parent's language |
+| POST | `/api/parent/tips` | AI summary, the child's **weak areas** (with the evidence and how to help), tips for home and conversation starters, in the parent's language |
+| POST | `/api/parent/ui-strings` | translates the portal's own labels for languages without built-in text |
+
+Parents can choose any of 14 languages (`GET /api/meta` → `parent_languages`): English, Hindi, French, Spanish,
+Arabic, Chinese, Punjabi, Tamil, Urdu, Bengali, Portuguese, Tagalog, Vietnamese and Korean. Arabic and Urdu
+display right-to-left.
 
 Pending or rejected parents get `403` from the overview and tips. Translations of questions and answers are cached, so each text is translated only once per language.
+
+### Assignments & grades (teacher)
+| Method | Path | Body | Returns |
+|---|---|---|---|
+| GET | `/api/teacher/classrooms/{id}/assignments` | | assignments with every student's grade (also in the dashboard) |
+| POST | `/api/teacher/classrooms/{id}/assignments` | `{kind: homework\|quiz\|test\|project, title, instructions?, due_date? (YYYY-MM-DD), max_points}` | assignment |
+| PUT | `/api/teacher/classrooms/{id}/assignments/{aid}/grades` | `[{student_id, score (null = not graded), feedback}]` | assignment (scores above `max_points` are rejected) |
+| DELETE | `/api/teacher/classrooms/{id}/assignments/{aid}` | | 204 |
 
 ### Interactive templates (`GET /api/meta`)
 The frontend builds one component per template. The AI only selects the template and fills in its
@@ -162,7 +175,8 @@ app/
   templates.py       interactive template registry + param validation
   routers/teacher.py teacher portal + misconception radar
   routers/student.py student portal (+ family code)
-  routers/parent.py  parent portal: link, verification status, translated overview, tips
+  routers/parent.py  parent portal: link, verification status, translated overview (grades, assignments, mistakes), tips
+  routers/assignments.py  teacher homework/quizzes/tests and gradebook
   translation.py     cached AI translation (lesson notes, questions/answers)
   ai/providers.py    Gemini / OpenAI (REST) / mock
   ai/prompts.py      system prompts

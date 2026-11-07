@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from app.ai import prompts
 from app.ai.providers import AIError, Provider, make_provider
-from app.config import SUPPORTED_LANGUAGES, get_settings
+from app.config import SUPPORTED_LANGUAGES, get_settings, language_name
 from app.templates import template_catalog, validate_template
 
 log = logging.getLogger(__name__)
@@ -79,8 +79,15 @@ class TranslationsOut(BaseModel):
     translations: list[str]
 
 
+class WeakAreaOut(BaseModel):
+    area: str
+    evidence: str = ""
+    how_to_help: str = ""
+
+
 class ParentTipsOut(BaseModel):
     summary: str
+    weak_areas: list[WeakAreaOut] = []
     tips: list[str] = []
     conversation_starters: list[str] = []
 
@@ -115,7 +122,7 @@ class AIService:
             {
                 "lesson": lesson,
                 "question": question,
-                "answer_language": SUPPORTED_LANGUAGES.get(language, language),
+                "answer_language": language_name(language),
                 "simpler": simpler,
             },
             AnswerOut,
@@ -185,8 +192,8 @@ class AIService:
             "translate_lesson",
             prompts.TRANSLATE_LESSON,
             {
-                "source_language": SUPPORTED_LANGUAGES.get(lesson.get("language", "en"), "English"),
-                "target_language": SUPPORTED_LANGUAGES.get(target_language, target_language),
+                "source_language": language_name(lesson.get("language", "en")),
+                "target_language": language_name(target_language),
                 "simplified": simplified,
                 "notes": lesson.get("notes", ""),
             },
@@ -201,14 +208,17 @@ class AIService:
         out = self._call(
             "translate_batch",
             prompts.TRANSLATE_BATCH,
-            {"target_language": SUPPORTED_LANGUAGES.get(target_language, target_language), "texts": texts},
+            {"target_language": language_name(target_language), "texts": texts},
             TranslationsOut,
         )
         if len(out.translations) != len(texts):
             raise AIError(f"Expected {len(texts)} translations, got {len(out.translations)}")
         return out.translations
 
-    def parent_tips(self, *, lesson: dict, child_questions: list[str], misconceptions: list[str], language: str) -> ParentTipsOut:
+    def parent_tips(
+        self, *, lesson: dict, child_questions: list[str], misconceptions: list[str], language: str,
+        grades: list[dict] | None = None, missed_quiz_questions: list[str] | None = None,
+    ) -> ParentTipsOut:
         return self._call(
             "parent_tips",
             prompts.PARENT_TIPS,
@@ -216,7 +226,9 @@ class AIService:
                 "lesson": lesson,
                 "child_questions": child_questions,
                 "class_misconceptions": misconceptions,
-                "language": SUPPORTED_LANGUAGES.get(language, language),
+                "grades": grades or [],
+                "missed_quiz_questions": missed_quiz_questions or [],
+                "language": language_name(language),
             },
             ParentTipsOut,
         )
@@ -228,7 +240,7 @@ class AIService:
             {
                 "lesson": lesson,
                 "concept": concept,
-                "language": SUPPORTED_LANGUAGES.get(language, language),
+                "language": language_name(language),
                 "simpler": simpler,
             },
             ExplainOut,

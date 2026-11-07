@@ -11,10 +11,12 @@ import { LIVE } from "@/lib/config";
 import * as api from "@/services/api";
 
 export {
-  analyzeQuestions, ensureStudentLanguage, getParentOverview, getParentStatus, getParentTips, getStudentFamily, linkParent,
+  analyzeQuestions, createAssignment, deleteAssignment, ensureStudentLanguage, getParentOverview, saveGrades, translateUiStrings, getParentStatus, getParentTips, getStudentFamily, linkParent,
   setParentLanguage, setParentVerification, signOutParent, useLesson, useLiveSync,
 } from "@/services/api";
-export type { ParentActivity, ParentOverview, ParentQuestion, ParentStatus, ParentTips, StudentFamily } from "@/services/api";
+export type {
+  ClassMistake, ParentActivity, ParentAssignment, ParentOverview, ParentQuestion, ParentStatus, ParentTips, StudentFamily, WeakArea,
+} from "@/services/api";
 
 const delay = (ms = 350) => new Promise((r) => setTimeout(r, ms));
 const uid = (p: string) => `${p}-${Math.random().toString(36).slice(2, 9)}`;

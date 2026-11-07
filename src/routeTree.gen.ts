@@ -17,6 +17,7 @@ import { Route as TeacherRouteImport } from './routes/teacher'
 import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
 import { Route as TeacherActivitiesRouteImport } from './routes/teacher.activities'
 import { Route as TeacherFamiliesRouteImport } from './routes/teacher.families'
+import { Route as TeacherGradesRouteImport } from './routes/teacher.grades'
 import { Route as TeacherInsightsRouteImport } from './routes/teacher.insights'
 import { Route as TeacherLiveRouteImport } from './routes/teacher.live'
 import { Route as TeacherRadarRouteImport } from './routes/teacher.radar'
@@ -62,6 +63,11 @@ const TeacherFamiliesRoute = TeacherFamiliesRouteImport.update({
   path: '/families',
   getParentRoute: () => TeacherRoute,
 } as any)
+const TeacherGradesRoute = TeacherGradesRouteImport.update({
+  id: '/grades',
+  path: '/grades',
+  getParentRoute: () => TeacherRoute,
+} as any)
 const TeacherInsightsRoute = TeacherInsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/teacher': typeof TeacherRouteWithChildren
   '/teacher/activities': typeof TeacherActivitiesRoute
   '/teacher/families': typeof TeacherFamiliesRoute
+  '/teacher/grades': typeof TeacherGradesRoute
   '/teacher/insights': typeof TeacherInsightsRoute
   '/teacher/live': typeof TeacherLiveRoute
   '/teacher/radar': typeof TeacherRadarRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByTo {
   '/parent': typeof ParentRoute
   '/teacher/activities': typeof TeacherActivitiesRoute
   '/teacher/families': typeof TeacherFamiliesRoute
+  '/teacher/grades': typeof TeacherGradesRoute
   '/teacher/insights': typeof TeacherInsightsRoute
   '/teacher/live': typeof TeacherLiveRoute
   '/teacher/radar': typeof TeacherRadarRoute
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/teacher': typeof TeacherRouteWithChildren
   '/teacher/activities': typeof TeacherActivitiesRoute
   '/teacher/families': typeof TeacherFamiliesRoute
+  '/teacher/grades': typeof TeacherGradesRoute
   '/teacher/insights': typeof TeacherInsightsRoute
   '/teacher/live': typeof TeacherLiveRoute
   '/teacher/radar': typeof TeacherRadarRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/teacher'
     | '/teacher/activities'
     | '/teacher/families'
+    | '/teacher/grades'
     | '/teacher/insights'
     | '/teacher/live'
     | '/teacher/radar'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/parent'
     | '/teacher/activities'
     | '/teacher/families'
+    | '/teacher/grades'
     | '/teacher/insights'
     | '/teacher/live'
     | '/teacher/radar'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/teacher'
     | '/teacher/activities'
     | '/teacher/families'
+    | '/teacher/grades'
     | '/teacher/insights'
     | '/teacher/live'
     | '/teacher/radar'
@@ -235,6 +247,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherFamiliesRouteImport
       parentRoute: typeof TeacherRoute
     }
+    '/teacher/grades': {
+      id: '/teacher/grades'
+      path: '/grades'
+      fullPath: '/teacher/grades'
+      preLoaderRoute: typeof TeacherGradesRouteImport
+      parentRoute: typeof TeacherRoute
+    }
     '/teacher/insights': {
       id: '/teacher/insights'
       path: '/insights'
@@ -269,6 +288,7 @@ declare module '@tanstack/react-router' {
 interface TeacherRouteChildren {
   TeacherActivitiesRoute: typeof TeacherActivitiesRoute
   TeacherFamiliesRoute: typeof TeacherFamiliesRoute
+  TeacherGradesRoute: typeof TeacherGradesRoute
   TeacherInsightsRoute: typeof TeacherInsightsRoute
   TeacherLiveRoute: typeof TeacherLiveRoute
   TeacherRadarRoute: typeof TeacherRadarRoute
@@ -279,6 +299,7 @@ interface TeacherRouteChildren {
 const TeacherRouteChildren: TeacherRouteChildren = {
   TeacherActivitiesRoute: TeacherActivitiesRoute,
   TeacherFamiliesRoute: TeacherFamiliesRoute,
+  TeacherGradesRoute: TeacherGradesRoute,
   TeacherInsightsRoute: TeacherInsightsRoute,
   TeacherLiveRoute: TeacherLiveRoute,
   TeacherRadarRoute: TeacherRadarRoute,

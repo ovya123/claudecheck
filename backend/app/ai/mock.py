@@ -87,6 +87,8 @@ class MockProvider:
     def _parent_tips(self, p: dict) -> dict:
         return {
             "summary": f"[mock {p['language']}] The class is learning about fractions.",
+            "weak_areas": [{"area": "Comparing fractions", "evidence": f"{len(p['grades'])} grades, {len(p['missed_quiz_questions'])} missed quiz questions",
+                            "how_to_help": "Compare slices of the same roti cut into 4 and 8."}],
             "tips": ["Cut a roti into 4 and then 8 pieces and compare one piece.", "Share sweets equally."],
             "conversation_starters": ["Which is bigger, 1/4 or 1/8 of a pizza?"],
         }

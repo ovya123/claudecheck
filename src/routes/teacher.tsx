@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { BarChart3, BookOpenCheck, Heart, LayoutGrid, Menu, Presentation, Radar, RotateCcw } from "lucide-react";
+import { BarChart3, BookOpenCheck, ClipboardList, Heart, LayoutGrid, Menu, Presentation, Radar, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { Logo } from "@/components/common";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ const nav = [
   { to: "/teacher/sessions", label: "Classroom Sessions", icon: Presentation },
   { to: "/teacher/radar", label: "Misconception Radar", icon: Radar },
   { to: "/teacher/activities", label: "Learning Activities", icon: BookOpenCheck },
+  { to: "/teacher/grades", label: "Assignments & Grades", icon: ClipboardList },
   { to: "/teacher/insights", label: "Insights", icon: BarChart3 },
   { to: "/teacher/families", label: "Families", icon: Heart },
 ] as const;
