@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DemoBadge, EmptyState, LangChip, timeAgo } from "@/components/common";
 import { MisconceptionCard, RadarVisual } from "@/components/radar/MisconceptionCard";
+import { AnalyzeButton } from "@/components/radar/AnalyzeButton";
+import { LIVE } from "@/lib/config";
 import { useAppState } from "@/lib/store";
 import { markAnswered } from "@/services/mockApi";
 
@@ -62,7 +64,7 @@ function Live() {
             </dl>
           </div>
           <div className="space-y-3 p-5 sm:p-6">
-            <div className="flex items-center justify-between"><p className="text-sm font-semibold">Detected misconceptions</p><DemoBadge label="Sample results — not live AI" /></div>
+            <div className="flex items-center justify-between gap-2"><p className="text-sm font-semibold">Detected misconceptions</p><DemoBadge label="Sample results — not live AI" /><AnalyzeButton /></div>
             {misconceptions.length === 0 ? (
               <EmptyState icon={Radar} title="Nothing detected yet" body="As questions arrive and are analyzed, shared misconceptions will appear here." />
             ) : (
@@ -78,7 +80,7 @@ function Live() {
             <h2 className="flex items-center gap-2 font-semibold"><Hourglass className="h-4 w-4 text-alert" /> Pending analysis</h2>
             <span className="rounded-full bg-alert-soft px-2 py-0.5 text-xs font-semibold text-alert-foreground">{pending.length}</span>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">New questions wait here until the analysis service is connected.</p>
+          <p className="mt-1 text-sm text-muted-foreground">{LIVE ? "New questions wait here until you click Analyze questions." : "New questions wait here until the analysis service is connected."}</p>
           <ul className="mt-4 space-y-2">
             {pending.length === 0 && <EmptyState icon={Check} title="All caught up" body="No questions are waiting." />}
             {pending.map((q) => (
@@ -96,7 +98,7 @@ function Live() {
             {feed.map((q) => (
               <li key={q.id} className="flex items-start gap-3 rounded-lg p-2 hover:bg-muted">
                 <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-semibold">{q.studentName.slice(0, 2)}</span>
-                <div className="min-w-0 flex-1"><p className="text-sm">{q.text}</p><p className="text-xs text-muted-foreground">{q.studentName}{q.status === "answered" && " · answered"}</p></div>
+                <div className="min-w-0 flex-1"><p className="text-sm">{q.text}</p>{q.translation && <p className="text-xs italic text-muted-foreground">“{q.translation}”</p>}<p className="text-xs text-muted-foreground">{q.studentName}{q.status === "answered" && " · answered"}</p></div>
                 <LangChip lang={q.detectedLanguage} />
               </li>
             ))}

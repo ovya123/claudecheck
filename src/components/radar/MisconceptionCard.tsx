@@ -8,6 +8,7 @@ import { LangChip } from "@/components/common";
 import { generateMiniLesson } from "@/services/mockApi";
 import type { Misconception, StudentQuestion } from "@/types";
 import { cn } from "@/lib/utils";
+import { LIVE } from "@/lib/config";
 
 const sev = {
   high: { bar: "bg-alert", label: "High frequency", chip: "bg-alert-soft text-alert-foreground" },
@@ -26,10 +27,15 @@ export function MisconceptionCard({ m, questions, defaultOpen = false, total }: 
 
   async function onGenerate() {
     setBusy(true);
-    const act = await generateMiniLesson(m.id);
-    setBusy(false);
-    toast.success("Mini-lesson ready to preview");
-    navigate({ to: "/teacher/activities", search: { id: act.id } });
+    try {
+      const act = await generateMiniLesson(m.id);
+      toast.success("Mini-lesson ready to preview");
+      navigate({ to: "/teacher/activities", search: { id: act.id } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not generate the mini-lesson");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -58,7 +64,7 @@ export function MisconceptionCard({ m, questions, defaultOpen = false, total }: 
               {support.map((q) => (
                 <li key={q.id} className="flex items-start gap-3 rounded-lg bg-card p-3 text-sm shadow-soft">
                   <LangChip lang={q.detectedLanguage} />
-                  <span className="flex-1">“{q.text}”</span>
+                  <span className="flex-1">“{q.text}”{q.translation && <span className="mt-0.5 block text-xs italic text-muted-foreground">{q.translation}</span>}</span>
                   <span className="text-xs text-muted-foreground">{q.studentName}</span>
                 </li>
               ))}
@@ -74,7 +80,7 @@ export function MisconceptionCard({ m, questions, defaultOpen = false, total }: 
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={() => setDetails(true)}>View details</Button>
             <Button size="sm" onClick={onGenerate} disabled={busy}>
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Generate mini-lesson
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} {busy && LIVE ? "Generating in 3 languages…" : "Generate mini-lesson"}
             </Button>
           </div>
         </div>
@@ -90,7 +96,7 @@ export function MisconceptionCard({ m, questions, defaultOpen = false, total }: 
             <div className="rounded-lg bg-muted p-3"><p className="font-display text-xl font-semibold">{m.languages.length}</p><p className="text-xs text-muted-foreground">Languages</p></div>
             <div className="rounded-lg bg-muted p-3"><p className="flex items-center justify-center gap-1 font-display text-xl font-semibold"><Users className="h-4 w-4" />{new Set(support.map((q) => q.studentId)).size}</p><p className="text-xs text-muted-foreground">Students</p></div>
           </div>
-          <p className="text-xs text-muted-foreground">These results are sample data for the prototype. A real analysis service will provide grouped results later.</p>
+          <p className="text-xs text-muted-foreground">{LIVE ? "Grouped by AI from this session's questions. Questions are anonymous." : "These results are sample data for the prototype. A real analysis service will provide grouped results later."}</p>
         </DialogContent>
       </Dialog>
     </article>

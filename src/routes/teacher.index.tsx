@@ -6,6 +6,20 @@ import { DemoBadge, LangChip, StatCard } from "@/components/common";
 import { RadarVisual } from "@/components/radar/MisconceptionCard";
 import { useAppState } from "@/lib/store";
 import { demoQuestionTimeline } from "@/data/demo";
+import { LIVE } from "@/lib/config";
+import type { StudentQuestion } from "@/types";
+
+/** Cumulative questions per 3-minute bucket since the first question (LIVE mode). */
+function questionTimeline(questions: StudentQuestion[]) {
+  if (questions.length === 0) return [{ t: "0′", questions: 0 }];
+  const times = questions.map((q) => q.createdAt).sort((a, b) => a - b);
+  const start = times[0]!;
+  const lastMin = Math.ceil((times[times.length - 1]! - start) / 60000);
+  const step = Math.max(1, Math.ceil(lastMin / 8));
+  const out = [];
+  for (let m = 0; m <= lastMin + step; m += step) out.push({ t: `${m}′`, questions: times.filter((x) => x <= start + m * 60000).length });
+  return out;
+}
 
 export const Route = createFileRoute("/teacher/")({
   head: () => ({
@@ -52,7 +66,7 @@ function Overview() {
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Students joined" value={students.length} icon={Users} tone="sky" />
         <StatCard label="Questions submitted" value={questions.length} hint={`${questions.filter((q) => q.status === "pending").length} pending analysis`} icon={MessageSquareText} />
-        <StatCard label="Misconceptions detected" value={misconceptions.length} hint="Sample results" icon={AlertTriangle} tone="alert" />
+        <StatCard label="Misconceptions detected" value={misconceptions.length} hint={LIVE ? "Detected by AI" : "Sample results"} icon={AlertTriangle} tone="alert" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
@@ -60,7 +74,7 @@ function Overview() {
           <div className="flex items-center justify-between"><h3 className="font-semibold">Questions over the lesson</h3><DemoBadge /></div>
           <div className="mt-4 h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={demoQuestionTimeline} margin={{ left: -20, right: 8, top: 8 }}>
+              <AreaChart data={LIVE ? questionTimeline(questions) : demoQuestionTimeline} margin={{ left: -20, right: 8, top: 8 }}>
                 <defs><linearGradient id="qg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="var(--primary)" stopOpacity={0.3} /><stop offset="1" stopColor="var(--primary)" stopOpacity={0} /></linearGradient></defs>
                 <CartesianGrid stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="t" stroke="var(--muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />

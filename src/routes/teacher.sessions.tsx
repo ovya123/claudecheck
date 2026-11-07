@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAppState } from "@/lib/store";
 import { createSession, setSessionStatus } from "@/services/mockApi";
+import { LIVE } from "@/lib/config";
 
 export const Route = createFileRoute("/teacher/sessions")({
   head: () => ({
@@ -37,10 +38,15 @@ function Sessions() {
     setErrors(errs);
     if (Object.keys(errs).length) return;
     setBusy(true);
-    const s = await createSession({ title: form.title.trim(), subject: form.subject.trim(), notes: form.notes.trim() });
-    setBusy(false);
-    setForm({ title: "", subject: "", notes: "" });
-    toast.success(`Session created · code ${s.joinCode}`);
+    try {
+      const s = await createSession({ title: form.title.trim(), subject: form.subject.trim(), notes: form.notes.trim() });
+      setForm({ title: "", subject: "", notes: "" });
+      toast.success(`Session created · code ${s.joinCode}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not create the session");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function copy() {
@@ -80,7 +86,7 @@ function Sessions() {
             <p className="text-right text-xs text-muted-foreground">{form.notes.length}/4000</p>
             {errors.notes && <p className="text-sm text-destructive">{errors.notes}</p>}
           </div>
-          <p className="text-xs text-muted-foreground">Creating a session replaces the current demo classroom.</p>
+          <p className="text-xs text-muted-foreground">{LIVE ? "Creating a session starts a new classroom with a new join code." : "Creating a session replaces the current demo classroom."}</p>
           <Button type="submit" disabled={busy}>{busy && <Loader2 className="h-4 w-4 animate-spin" />} Create session</Button>
         </form>
 

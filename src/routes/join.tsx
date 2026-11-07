@@ -9,6 +9,7 @@ import { LANGUAGES, setLang, useLang } from "@/i18n";
 import { joinSession } from "@/services/mockApi";
 import type { Lang } from "@/types";
 import { cn } from "@/lib/utils";
+import { LIVE } from "@/lib/config";
 
 export const Route = createFileRoute("/join")({
   head: () => ({
@@ -54,9 +55,11 @@ function Join() {
   return (
     <div className="relative grid min-h-screen place-items-center px-4 py-10">
       <div className="dot-grid absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
-      <div className="w-full max-w-md">
+      <div className="relative w-full max-w-md">
+        <span className="glow -z-10 -left-16 top-24 h-64 w-64 bg-primary/25" aria-hidden />
+        <span className="glow -z-10 -right-16 bottom-10 h-56 w-56 bg-alert/20" aria-hidden />
         <div className="mb-8 flex justify-center"><Logo /></div>
-        <form onSubmit={onSubmit} className="surface space-y-6 p-7 shadow-lift" noValidate>
+        <form onSubmit={onSubmit} className="surface space-y-6 border-t-4 border-t-primary p-7 shadow-lift" noValidate>
           <div className="text-center">
             <h1 className="font-display text-2xl font-semibold">Join your class</h1>
             <p className="mt-1 text-sm text-muted-foreground">No account needed. Ask your teacher for the code.</p>
@@ -65,7 +68,7 @@ function Join() {
             <Label htmlFor="code">Class code</Label>
             <Input id="code" value={code} maxLength={6} autoComplete="off" autoCapitalize="characters" onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
               placeholder="ABC123" className="h-14 text-center font-mono text-2xl tracking-[0.4em] uppercase" />
-            <p className="text-xs text-muted-foreground">Demo code: <button type="button" className="font-mono font-semibold text-primary hover:underline" onClick={() => setCode("FRC24B")}>FRC24B</button></p>
+            {!LIVE && <p className="text-xs text-muted-foreground">Demo code: <button type="button" className="font-mono font-semibold text-primary hover:underline" onClick={() => setCode("FRC24B")}>FRC24B</button></p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="name">Your name</Label>

@@ -7,7 +7,7 @@ export function LanguageSwitcher() {
   const lang = useLang();
   return (
     <Select value={lang} onValueChange={(v) => setLang(v as Lang)}>
-      <SelectTrigger className="h-9 w-[150px] bg-card" aria-label="Interface language">
+      <SelectTrigger className="h-9 w-auto min-w-[150px] gap-2 bg-card" aria-label="Interface language">
         <Languages className="h-4 w-4 text-primary" />
         <SelectValue />
       </SelectTrigger>

@@ -70,7 +70,7 @@ function Activities() {
               {act.status === "shared" ? (
                 <Button variant="outline" disabled><CheckCircle2 className="h-4 w-4" /> Shared</Button>
               ) : (
-                <Button disabled={busy} onClick={async () => { setBusy(true); await shareActivity(act.id); setBusy(false); toast.success("Shared with class — students see it now"); }}>
+                <Button disabled={busy} onClick={async () => { setBusy(true); try { await shareActivity(act.id); toast.success("Shared with class — students see it now"); } catch (e) { toast.error(e instanceof Error ? e.message : "Could not share"); } finally { setBusy(false); } }}>
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Share with class
                 </Button>
               )}

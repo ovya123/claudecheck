@@ -33,6 +33,10 @@ export type StudentQuestion = {
   misconceptionId?: string | undefined;
   createdAt: number;
   isDemo?: boolean | undefined;
+  /** English translation from the backend (LIVE mode, teacher view). */
+  translation?: string | undefined;
+  /** AI answer in the student's language (LIVE mode, student view). */
+  answer?: string | undefined;
 };
 
 export type Misconception = {

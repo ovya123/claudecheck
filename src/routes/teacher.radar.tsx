@@ -3,6 +3,7 @@ import { Radar } from "lucide-react";
 import { DemoBadge, EmptyState } from "@/components/common";
 import { MisconceptionCard, RadarVisual } from "@/components/radar/MisconceptionCard";
 import { useAppState } from "@/lib/store";
+import { AnalyzeButton } from "@/components/radar/AnalyzeButton";
 
 export const Route = createFileRoute("/teacher/radar")({
   head: () => ({
@@ -26,6 +27,7 @@ function RadarPage() {
           <p className="text-muted-foreground">Different concepts stay separate — each card is one underlying misunderstanding.</p>
         </div>
         <DemoBadge label="Sample results — analysis service not yet connected" />
+        <AnalyzeButton size="default" />
       </div>
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <div className="surface h-fit p-5">

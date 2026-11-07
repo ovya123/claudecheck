@@ -8,9 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Logo } from "@/components/common";
 import { LanguageSwitcher } from "@/components/student/LanguageSwitcher";
 import { FractionMiniLesson } from "@/components/lesson/FractionMiniLesson";
-import { lessonContent, t, useLang, type ExplanationLevel } from "@/i18n";
+import { t, useLang, type ExplanationLevel } from "@/i18n";
 import { setStudentId, useAppState, useStudentId } from "@/lib/store";
-import { generateExplanation, submitQuestion, submitQuizResponse } from "@/services/mockApi";
+import { ensureStudentLanguage, generateExplanation, submitQuestion, submitQuizResponse, useLesson, useLiveSync } from "@/services/mockApi";
+import { LIVE } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/classroom")({
@@ -36,6 +37,10 @@ function Classroom() {
   const navigate = useNavigate();
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
+  useLiveSync("student");
+  // LIVE: tell the backend when the student switches language (lesson, answers and activities follow).
+  useEffect(() => { if (LIVE && studentId) ensureStudentLanguage(lang).catch(() => {}); }, [lang, studentId]);
+  const { lesson, error: lessonError } = useLesson(lang);
   const student = state.students.find((s) => s.id === studentId);
 
   if (!hydrated) return <div className="mx-auto max-w-6xl space-y-4 p-6"><Skeleton className="h-12 w-full" /><Skeleton className="h-64 w-full" /></div>;
@@ -52,13 +57,12 @@ function Classroom() {
     );
   }
 
-  const lesson = lessonContent[lang];
   const mine = state.questions.filter((q) => q.studentId === student.id).sort((a, b) => b.createdAt - a.createdAt);
   const shared = state.activities.filter((a) => a.status === "shared");
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 border-b bg-background/85 backdrop-blur">
+      <header className="sticky top-0 z-20 border-b bg-card/80 shadow-soft backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
           <Logo />
           {state.session.status === "live" && <span className="hidden items-center gap-1.5 rounded-full bg-success-soft px-2.5 py-1 text-xs font-semibold text-success sm:flex"><span className="live-dot" />{t(lang, "live")}</span>}
@@ -72,13 +76,16 @@ function Classroom() {
 
       <main className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
-          <article className="surface p-6 sm:p-8">
+          <article className="surface relative overflow-hidden p-6 sm:p-8">
+            <span className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-primary via-sky to-alert" aria-hidden />
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">{t(lang, "lesson")} · {state.session.subject}</p>
             <h1 className="mt-2 font-display text-3xl font-semibold">{state.session.title}</h1>
-            <p className="mt-3 inline-flex items-center gap-2 rounded-lg bg-sky-soft px-3 py-1.5 text-sm"><span className="text-muted-foreground">{t(lang, "currentTopic")}:</span> <b>{lesson.topic}</b></p>
+            <p className="mt-3 inline-flex items-center gap-2 rounded-lg bg-sky-soft px-3 py-1.5 text-sm"><span className="text-muted-foreground">{t(lang, "currentTopic")}:</span> <b>{lesson?.topic ?? state.session.subject}</b></p>
             <div className="mt-6 max-w-prose space-y-6 text-[17px] leading-relaxed">
-              {lesson.sections.map((s) => (
-                <section key={s.heading}><h2 className="font-semibold">{s.heading}</h2><p className="mt-1 text-foreground/85">{s.body}</p></section>
+              {lessonError && <p className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive"><AlertCircle className="h-4 w-4" />{lessonError}</p>}
+              {!lesson && !lessonError && <div className="space-y-3"><Skeleton className="h-4 w-11/12" /><Skeleton className="h-4 w-4/5" /><Skeleton className="h-4 w-2/3" /></div>}
+              {lesson?.sections.map((s, i) => (
+                <section key={s.heading || i}>{s.heading && <h2 className="font-semibold">{s.heading}</h2>}<p className="mt-1 whitespace-pre-line text-foreground/85">{s.body}</p></section>
               ))}
             </div>
             {state.session.notes && (
@@ -115,6 +122,7 @@ function Classroom() {
                 {mine.map((q) => (
                   <li key={q.id} className="rounded-lg border p-3">
                     <p className="whitespace-pre-wrap text-sm">{q.text}</p>
+                    {q.answer && <p className="mt-2 whitespace-pre-line rounded-md bg-sky-soft p-2.5 text-sm leading-relaxed">{q.answer}</p>}
                     <p className={cn("mt-2 inline-flex items-center gap-1 text-xs font-medium", q.status === "answered" ? "text-success" : q.status === "analyzed" ? "text-sky" : "text-alert-foreground")}>
                       {q.status === "answered" ? <><CheckCircle2 className="h-3 w-3" />{t(lang, "answered")}</> : q.status === "analyzed" ? <><Eye className="h-3 w-3" />{t(lang, "seen")}</> : <><Clock className="h-3 w-3" />{t(lang, "pending")}</>}
                     </p>
@@ -140,10 +148,15 @@ function QuestionComposer({ studentId, studentName }: { studentId: string; stude
     e.preventDefault();
     if (!valid) return;
     setBusy(true);
-    await submitQuestion({ studentId, studentName, text }); // sent exactly as typed
-    setBusy(false);
-    setText("");
-    toast.success("✓");
+    try {
+      await submitQuestion({ studentId, studentName, text }); // sent exactly as typed
+      setText("");
+      toast.success("✓");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send your question.");
+    } finally {
+      setBusy(false);
+    }
   }
   return (
     <form onSubmit={submit} className="surface p-6">
@@ -179,7 +192,7 @@ function ExplanationPanel() {
     <section className="surface overflow-hidden" aria-live="polite">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-primary-soft/50 px-6 py-4">
         <h2 className="flex items-center gap-2 font-semibold"><Wand2 className="h-4 w-4 text-primary" /> {t(lang, "explanation")}</h2>
-        <span className="text-[11px] text-muted-foreground">{t(lang, "sample")}</span>
+        {!LIVE && <span className="text-[11px] text-muted-foreground">{t(lang, "sample")}</span>}
       </div>
       <div className="min-h-[160px] p-6">
         {status === "loading" && <div className="space-y-3" aria-label={t(lang, "loading")}><Skeleton className="h-4 w-11/12" /><Skeleton className="h-4 w-4/5" /><Skeleton className="h-4 w-2/3" /><p className="pt-1 text-xs text-muted-foreground">{t(lang, "loading")}</p></div>}
