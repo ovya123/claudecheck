@@ -28,3 +28,9 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## ClassBridge architecture
+- Frontend-only prototype: all data flows through Promise-based functions in `src/services/mockApi.ts` so they can be swapped for real API calls without UI changes.
+- Shared demo state lives in `src/lib/store.ts` (localStorage + BroadcastChannel) so teacher and student tabs sync; read it via `useAppState()`.
+- Student UI strings and translated lesson/explanation content live in `src/i18n`; the interface language is independent of the language a question is typed in, and questions are stored exactly as typed.
+- AI results (misconceptions, analytics) are seeded demo data and must stay visibly labeled as demo data.

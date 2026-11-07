@@ -32,7 +32,7 @@ export function fractionActivityTemplate(sessionId: string, misconceptionId?: st
         hi: "कौन सी भिन्न बड़ी है: 1/3 या 1/6?",
         fr: "Quelle fraction est la plus grande : 1/3 ou 1/6 ?",
       },
-      options: ["1/3", "1/6", "They are equal"],
+      options: ["1/3", "1/6", "1/3 = 1/6"],
       correctIndex: 0,
       feedback: {
         en: { correct: "Exactly! Sharing into 3 parts gives bigger pieces than sharing into 6.", incorrect: "Not quite. Picture the same pizza cut into 3 or into 6 — which slices are bigger?" },

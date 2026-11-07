@@ -70,5 +70,6 @@ export function timeAgo(ts: number, now: number) {
   if (s < 60) return "just now";
   const m = Math.round(s / 60);
   if (m < 60) return `${m}m ago`;
-  return `${Math.round(m / 60)}h ago`;
+  if (m < 1440) return `${Math.round(m / 60)}h ago`;
+  return "earlier";
 }
