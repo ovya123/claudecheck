@@ -48,7 +48,7 @@ function Landing() {
             <p className="inline-flex items-center gap-2 rounded-full border bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft backdrop-blur">
               <span className="live-dot" /> Different languages. Different learning speeds. One inclusive classroom.
             </p>
-            <h1 className="mt-6 font-display text-4xl font-semibold leading-[1.05] sm:text-6xl">
+            <h1 className="mt-6 font-display text-5xl font-semibold leading-[1.02] tracking-tight sm:text-7xl">
               Every student deserves to <em className="marker text-primary not-italic">understand</em>, not just attend.
             </h1>
             <p className="mt-5 max-w-xl text-lg text-muted-foreground">
@@ -67,6 +67,18 @@ function Landing() {
           </div>
           <RadarPreview />
         </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-5 pb-16">
+        <dl className="grid grid-cols-2 gap-4 rounded-2xl border bg-card/70 p-6 shadow-soft backdrop-blur md:grid-cols-4">
+          {[["3", "languages, any script"], ["1", "radar for the whole class"], ["100%", "private questions"], ["< 1 min", "from question to insight"]].map(([v, l]) => (
+            <div key={l} className="text-center">
+              <dt className="sr-only">{l}</dt>
+              <dd className="font-display text-3xl font-semibold text-primary-deep sm:text-4xl">{v}</dd>
+              <dd className="mt-1 text-sm text-muted-foreground">{l}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       <section id="how" className="border-y bg-card/70 backdrop-blur">
@@ -90,7 +102,9 @@ function Landing() {
       </section>
 
       <section className="mx-auto max-w-6xl px-5 py-20">
-        <div className="grid gap-5 sm:grid-cols-2">
+        <p className="text-sm font-semibold uppercase tracking-wider text-primary">Built for inclusive classrooms</p>
+        <h2 className="mt-2 max-w-xl font-display text-3xl font-semibold sm:text-4xl">Everything a multilingual class needs, in one place.</h2>
+        <div className="mt-10 grid gap-5 sm:grid-cols-2">
           {features.map((f) => (
             <div key={f.title} className="surface p-6 transition-all hover:-translate-y-0.5 hover:shadow-lift">
               <span className={cn("grid h-11 w-11 place-items-center rounded-xl", f.tile)}><f.icon className="h-5 w-5" /></span>
@@ -122,6 +136,16 @@ function Landing() {
 
 function RadarPreview() {
   return (
+    <div className="relative">
+      {[
+        ["Why is 1/8 smaller?", "EN", "-left-6 -top-6 rotate-[-4deg]", "0s"],
+        ["हर बड़ा क्यों?", "HI", "-right-4 -top-10 rotate-[3deg]", "1.2s"],
+        ["Pourquoi ?", "FR", "-bottom-7 left-10 rotate-[2deg]", "2.4s"],
+      ].map(([q, l, pos, delay]) => (
+        <div key={l} className={cn("float absolute z-10 hidden items-center gap-2 rounded-2xl rounded-bl-sm border bg-card px-3 py-2 text-sm font-medium shadow-lift sm:flex", pos)} style={{ animationDelay: delay }}>
+          <span className="rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">{l}</span>{q}
+        </div>
+      ))}
     <div className="surface relative p-5 shadow-lift">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold"><Radar className="h-4 w-4 text-primary" /> Misconception Radar</div>
@@ -144,6 +168,7 @@ function RadarPreview() {
         </div>
       </div>
       <div className="mt-4 flex items-center gap-2 rounded-lg bg-muted p-3 text-sm"><MessageSquareText className="h-4 w-4 text-muted-foreground" /> 2 questions waiting for analysis</div>
+    </div>
     </div>
   );
 }
