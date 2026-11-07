@@ -599,16 +599,18 @@ export async function getParentOverview(): Promise<ParentOverview> {
   const lang = asLang(r.language); // the pizza widget's own labels exist in en/hi/fr only
   return {
     language: r.language, childName: r.child_name, classroomTitle: r.classroom_title, classroomTopic: r.classroom_topic,
-    lessonNotes: r.lesson_notes, stats: r.stats, gradeSummary: r.grade_summary,
-    assignments: r.assignments.map((a) => ({
+    // `?? []` / `?? {}`: tolerate a backend started from older code instead of crashing the page.
+    lessonNotes: r.lesson_notes ?? "", gradeSummary: r.grade_summary ?? {},
+    stats: Object.assign({ questions: 0, activities: 0, activities_done: 0, correct: 0, assignments: 0, graded: 0 }, r.stats),
+    assignments: (r.assignments ?? []).map((a) => ({
       id: a.id, kind: KINDS.includes(a.kind as AssignmentKind) ? (a.kind as AssignmentKind) : "homework", title: a.title,
       instructions: a.instructions, dueDate: a.due_date, maxPoints: a.max_points, score: a.score, percent: a.percent, feedback: a.feedback,
     })),
-    classMistakes: r.class_mistakes.map((m) => ({ id: m.id, title: m.title, description: m.description, childAffected: m.child_affected })),
-    questions: r.questions.map((q) => ({
+    classMistakes: (r.class_mistakes ?? []).map((m) => ({ id: m.id, title: m.title, description: m.description, childAffected: m.child_affected })),
+    questions: (r.questions ?? []).map((q) => ({
       id: q.id, original: q.original, originalLanguage: q.original_language, translated: q.translated, answer: q.answer, createdAt: ts(q.created_at),
     })),
-    activities: r.activities.map((a) => ({
+    activities: (r.activities ?? []).map((a) => ({
       id: a.id, title: a.title, explanation: a.explanation, quizQuestion: a.quiz_question, quizOptions: a.quiz_options,
       correctIndex: a.correct_index, childAnswerIndex: a.child_answer_index, childCorrect: a.child_correct,
       lesson: mapStudentActivity({
@@ -626,8 +628,8 @@ export async function getParentTips(): Promise<ParentTips> {
     summary: string; tips: string[]; conversation_starters: string[]; weak_areas: { area: string; evidence: string; how_to_help: string }[];
   }>("/api/parent/tips", { method: "POST", headers: parentHeaders(c) });
   return {
-    summary: r.summary, tips: r.tips, conversationStarters: r.conversation_starters,
-    weakAreas: r.weak_areas.map((w) => ({ area: w.area, evidence: w.evidence, howToHelp: w.how_to_help })),
+    summary: r.summary, tips: r.tips ?? [], conversationStarters: r.conversation_starters ?? [],
+    weakAreas: (r.weak_areas ?? []).map((w) => ({ area: w.area, evidence: w.evidence, howToHelp: w.how_to_help })),
   };
 }
 
