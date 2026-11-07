@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { AlertCircle, BookOpen, CheckCircle2, Clock, Eye, Lightbulb, Loader2, LogOut, Send, Sparkles, Wand2 } from "lucide-react";
+import { AlertCircle, BookOpen, CheckCircle2, Clock, Copy, Eye, Heart, Lightbulb, Loader2, LogOut, Send, ShieldCheck, Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,7 +10,7 @@ import { LanguageSwitcher } from "@/components/student/LanguageSwitcher";
 import { FractionMiniLesson } from "@/components/lesson/FractionMiniLesson";
 import { t, useLang, type ExplanationLevel } from "@/i18n";
 import { setStudentId, useAppState, useStudentId } from "@/lib/store";
-import { ensureStudentLanguage, generateExplanation, submitQuestion, submitQuizResponse, useLesson, useLiveSync } from "@/services/mockApi";
+import { ensureStudentLanguage, generateExplanation, getStudentFamily, submitQuestion, submitQuizResponse, useLesson, useLiveSync, type StudentFamily } from "@/services/mockApi";
 import { LIVE } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
@@ -147,9 +147,44 @@ function Classroom() {
               </ul>
             )}
           </section>
+          {LIVE && <FamilyCard />}
         </aside>
       </main>
     </div>
+  );
+}
+
+function FamilyCard() {
+  const lang = useLang();
+  const [family, setFamily] = useState<StudentFamily | null>(null);
+  useEffect(() => {
+    const load = () => getStudentFamily().then(setFamily).catch(() => {});
+    load();
+    const id = window.setInterval(load, 8000);
+    return () => window.clearInterval(id);
+  }, []);
+  if (!family) return null;
+  const statusText = { pending: t(lang, "familyWaiting"), verified: t(lang, "familyVerified"), rejected: t(lang, "familyRejected") };
+  const statusCls = { pending: "bg-alert-soft text-alert-foreground", verified: "bg-success-soft text-success", rejected: "bg-destructive/10 text-destructive" };
+  return (
+    <section className="surface bg-gradient-to-br from-alert-soft/50 to-card to-50% p-6">
+      <h2 className="flex items-center gap-2 font-semibold"><Heart className="h-4 w-4 text-alert" /> {t(lang, "family")}</h2>
+      <p className="mt-1 text-sm text-muted-foreground">{t(lang, "familyHint")}</p>
+      <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-dashed border-alert/50 bg-card px-4 py-3">
+        <span className="font-mono text-2xl font-semibold tracking-[0.2em]" data-testid="family-code">{family.familyCode}</span>
+        <Button size="icon" variant="ghost" aria-label="Copy" onClick={() => { navigator.clipboard?.writeText(family.familyCode).catch(() => {}); toast.success(t(lang, "copied")); }}><Copy className="h-4 w-4" /></Button>
+      </div>
+      {family.parents.length > 0 && (
+        <ul className="mt-3 space-y-2">
+          {family.parents.map((p) => (
+            <li key={p.id} className="flex items-center justify-between gap-2 text-sm">
+              <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-muted-foreground" />{p.name} · {p.relation}</span>
+              <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", statusCls[p.status])}>{statusText[p.status]}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 

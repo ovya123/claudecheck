@@ -82,6 +82,17 @@ export type QuizResponse = {
   createdAt: number;
 };
 
+/** A parent/guardian who asked to see a student's work (LIVE mode). */
+export type ParentLink = {
+  id: string;
+  name: string;
+  relation: string;
+  language: Lang;
+  status: "pending" | "verified" | "rejected";
+  studentName: string;
+  createdAt: number;
+};
+
 export type AppState = {
   session: ClassroomSession;
   students: Student[];
@@ -89,4 +100,5 @@ export type AppState = {
   misconceptions: Misconception[];
   activities: LearningActivity[];
   quizResponses: QuizResponse[];
+  parents?: ParentLink[] | undefined;
 };

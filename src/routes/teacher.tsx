@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { BarChart3, BookOpenCheck, LayoutGrid, Menu, Presentation, Radar, RotateCcw } from "lucide-react";
+import { BarChart3, BookOpenCheck, Heart, LayoutGrid, Menu, Presentation, Radar, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { Logo } from "@/components/common";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,12 @@ const nav = [
   { to: "/teacher/radar", label: "Misconception Radar", icon: Radar },
   { to: "/teacher/activities", label: "Learning Activities", icon: BookOpenCheck },
   { to: "/teacher/insights", label: "Insights", icon: BarChart3 },
+  { to: "/teacher/families", label: "Families", icon: Heart },
 ] as const;
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+  const { parents = [] } = useAppState();
+  const waiting = parents.filter((p) => p.status === "pending").length;
   return (
     <nav className="space-y-1">
       {nav.map((n) => (
@@ -29,6 +32,9 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-background/65 transition-colors hover:bg-background/10 hover:text-background"
           activeProps={{ className: "!bg-primary !text-primary-foreground shadow-soft" }}>
           <n.icon className="h-4 w-4" /> {n.label}
+          {n.to === "/teacher/families" && waiting > 0 && (
+            <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-alert px-1.5 text-[11px] font-bold text-foreground" aria-label={`${waiting} waiting`}>{waiting}</span>
+          )}
         </Link>
       ))}
     </nav>

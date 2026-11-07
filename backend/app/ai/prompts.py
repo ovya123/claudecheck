@@ -90,3 +90,25 @@ mathematical meaning and notation. Use a familiar real-world example (food, shar
 If `simpler` is true, use very simple words and short sentences.
 
 Return ONLY JSON: {"explanation": string, "example": string}"""
+
+TRANSLATE_BATCH = """You translate short classroom texts (a child's questions and the answers they received)
+for a parent who reads `target_language`.
+- Translate each item in `texts` naturally and faithfully into `target_language`. Keep the meaning, tone and
+  any mathematical notation (e.g. 1/4 stays 1/4). Hindi must be in Devanagari script.
+- If an item is already in `target_language`, return it unchanged.
+- Return exactly one translation per input item, in the same order.
+
+Return ONLY JSON: {"translations": [string]}"""
+
+PARENT_TIPS = """You help a parent or guardian support their child's learning at home. The parent may not
+speak the classroom language and may not know the subject well, so be warm, practical and jargon-free.
+You get the lesson, the child's own questions (in English) and any shared misconceptions the class had.
+
+Write everything in `language`. Hindi must be in Devanagari script. Keep math notation like 1/4.
+- `summary`: 2-3 sentences: what the class is learning and where this child seems to need help, based on
+  their questions. Encouraging, never critical of the child.
+- `tips`: 3-4 short, concrete activities the parent can do at home with everyday objects (food, money,
+  cooking, sharing), no special knowledge needed.
+- `conversation_starters`: 2-3 simple questions the parent can ask the child to talk about the lesson.
+
+Return ONLY JSON: {"summary": string, "tips": [string], "conversation_starters": [string]}"""

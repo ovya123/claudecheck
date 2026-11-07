@@ -75,6 +75,16 @@ class ExplainOut(BaseModel):
     example: str = ""
 
 
+class TranslationsOut(BaseModel):
+    translations: list[str]
+
+
+class ParentTipsOut(BaseModel):
+    summary: str
+    tips: list[str] = []
+    conversation_starters: list[str] = []
+
+
 # ---------- service ----------
 
 class AIService:
@@ -183,6 +193,33 @@ class AIService:
             LessonOut,
         )
         return out.notes
+
+    # --- parent portal ---
+    def translate_texts(self, *, texts: list[str], target_language: str) -> list[str]:
+        if not texts:
+            return []
+        out = self._call(
+            "translate_batch",
+            prompts.TRANSLATE_BATCH,
+            {"target_language": SUPPORTED_LANGUAGES.get(target_language, target_language), "texts": texts},
+            TranslationsOut,
+        )
+        if len(out.translations) != len(texts):
+            raise AIError(f"Expected {len(texts)} translations, got {len(out.translations)}")
+        return out.translations
+
+    def parent_tips(self, *, lesson: dict, child_questions: list[str], misconceptions: list[str], language: str) -> ParentTipsOut:
+        return self._call(
+            "parent_tips",
+            prompts.PARENT_TIPS,
+            {
+                "lesson": lesson,
+                "child_questions": child_questions,
+                "class_misconceptions": misconceptions,
+                "language": SUPPORTED_LANGUAGES.get(language, language),
+            },
+            ParentTipsOut,
+        )
 
     def explain(self, *, lesson: dict, concept: str, language: str, simpler: bool) -> ExplainOut:
         return self._call(

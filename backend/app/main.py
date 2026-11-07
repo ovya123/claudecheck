@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from app.ai.providers import AIError
 from app.config import SUPPORTED_LANGUAGES, get_settings
 from app.db import init_db
-from app.routers import student, teacher
+from app.routers import parent, student, teacher
 from app.templates import template_catalog
 
 logging.basicConfig(level=logging.INFO)
@@ -56,3 +56,4 @@ def meta():
 
 app.include_router(teacher.router)
 app.include_router(student.router)
+app.include_router(parent.router)

@@ -7,7 +7,8 @@ from app import schemas
 from app.ai.service import AIService, get_ai
 from app.db import get_db
 from app.deps import get_student, lesson_context
-from app.models import Activity, Classroom, LessonTranslation, Question, QuizResponse, Student
+from app.models import Activity, Classroom, Parent, Question, QuizResponse, Student, new_family_code
+from app.translation import lesson_notes_in
 
 router = APIRouter(prefix="/api", tags=["student"])
 
@@ -65,28 +66,26 @@ def get_lesson(
 ):
     """Lesson notes in the student's language (AI-translated, cached per language)."""
     c = student.classroom
-    lang = student.language
-    base = dict(title=c.title, topic=c.topic, language=lang, simplified=simplified)
-    if not c.lesson_notes.strip():
-        return schemas.LessonView(**base, notes="")
-    if lang == c.lesson_language and not simplified:
-        return schemas.LessonView(**base, notes=c.lesson_notes)
+    notes = lesson_notes_in(db, ai, c, student.language, simplified)
+    return schemas.LessonView(title=c.title, topic=c.topic, language=student.language, simplified=simplified, notes=notes)
 
-    cached = db.scalar(select(LessonTranslation).where(
-        LessonTranslation.classroom_id == c.id,
-        LessonTranslation.language == lang,
-        LessonTranslation.simplified == simplified,
-    ))
-    if cached:
-        return schemas.LessonView(**base, notes=cached.notes)
 
-    notes = ai.translate_lesson(lesson=lesson_context(c), target_language=lang, simplified=simplified)
-    db.add(LessonTranslation(classroom_id=c.id, language=lang, simplified=simplified, notes=notes))
-    try:
+# ---------- family (parent access) ----------
+
+@router.get("/student/family", response_model=schemas.StudentFamily)
+def my_family(student: Student = Depends(get_student), db: Session = Depends(get_db)):
+    """The student's private family code, and who has asked to see their work (and whether verified)."""
+    if not student.family_code:
+        student.family_code = new_family_code()
         db.commit()
-    except IntegrityError:  # another request cached it concurrently
-        db.rollback()
-    return schemas.LessonView(**base, notes=notes)
+    parents = db.scalars(select(Parent).where(Parent.student_id == student.id).order_by(Parent.id)).all()
+    return schemas.StudentFamily(
+        family_code=student.family_code,
+        parents=[schemas.FamilyLinkView(
+            id=p.id, name=p.name, relation=p.relation, language=p.language, status=p.status,
+            student_id=student.id, student_name=student.display_name or "", created_at=p.created_at,
+        ) for p in parents],
+    )
 
 
 # ---------- private questions ----------

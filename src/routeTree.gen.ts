@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClassroomRouteImport } from './routes/classroom'
 import { Route as JoinRouteImport } from './routes/join'
+import { Route as ParentRouteImport } from './routes/parent'
 import { Route as TeacherRouteImport } from './routes/teacher'
 import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
 import { Route as TeacherActivitiesRouteImport } from './routes/teacher.activities'
+import { Route as TeacherFamiliesRouteImport } from './routes/teacher.families'
 import { Route as TeacherInsightsRouteImport } from './routes/teacher.insights'
 import { Route as TeacherLiveRouteImport } from './routes/teacher.live'
 import { Route as TeacherRadarRouteImport } from './routes/teacher.radar'
@@ -35,6 +37,11 @@ const JoinRoute = JoinRouteImport.update({
   path: '/join',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ParentRoute = ParentRouteImport.update({
+  id: '/parent',
+  path: '/parent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeacherRoute = TeacherRouteImport.update({
   id: '/teacher',
   path: '/teacher',
@@ -48,6 +55,11 @@ const TeacherIndexRoute = TeacherIndexRouteImport.update({
 const TeacherActivitiesRoute = TeacherActivitiesRouteImport.update({
   id: '/activities',
   path: '/activities',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherFamiliesRoute = TeacherFamiliesRouteImport.update({
+  id: '/families',
+  path: '/families',
   getParentRoute: () => TeacherRoute,
 } as any)
 const TeacherInsightsRoute = TeacherInsightsRouteImport.update({
@@ -75,8 +87,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/classroom': typeof ClassroomRoute
   '/join': typeof JoinRoute
+  '/parent': typeof ParentRoute
   '/teacher': typeof TeacherRouteWithChildren
   '/teacher/activities': typeof TeacherActivitiesRoute
+  '/teacher/families': typeof TeacherFamiliesRoute
   '/teacher/insights': typeof TeacherInsightsRoute
   '/teacher/live': typeof TeacherLiveRoute
   '/teacher/radar': typeof TeacherRadarRoute
@@ -87,7 +101,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/classroom': typeof ClassroomRoute
   '/join': typeof JoinRoute
+  '/parent': typeof ParentRoute
   '/teacher/activities': typeof TeacherActivitiesRoute
+  '/teacher/families': typeof TeacherFamiliesRoute
   '/teacher/insights': typeof TeacherInsightsRoute
   '/teacher/live': typeof TeacherLiveRoute
   '/teacher/radar': typeof TeacherRadarRoute
@@ -99,8 +115,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/classroom': typeof ClassroomRoute
   '/join': typeof JoinRoute
+  '/parent': typeof ParentRoute
   '/teacher': typeof TeacherRouteWithChildren
   '/teacher/activities': typeof TeacherActivitiesRoute
+  '/teacher/families': typeof TeacherFamiliesRoute
   '/teacher/insights': typeof TeacherInsightsRoute
   '/teacher/live': typeof TeacherLiveRoute
   '/teacher/radar': typeof TeacherRadarRoute
@@ -113,8 +131,10 @@ export interface FileRouteTypes {
     | '/'
     | '/classroom'
     | '/join'
+    | '/parent'
     | '/teacher'
     | '/teacher/activities'
+    | '/teacher/families'
     | '/teacher/insights'
     | '/teacher/live'
     | '/teacher/radar'
@@ -125,7 +145,9 @@ export interface FileRouteTypes {
     | '/'
     | '/classroom'
     | '/join'
+    | '/parent'
     | '/teacher/activities'
+    | '/teacher/families'
     | '/teacher/insights'
     | '/teacher/live'
     | '/teacher/radar'
@@ -136,8 +158,10 @@ export interface FileRouteTypes {
     | '/'
     | '/classroom'
     | '/join'
+    | '/parent'
     | '/teacher'
     | '/teacher/activities'
+    | '/teacher/families'
     | '/teacher/insights'
     | '/teacher/live'
     | '/teacher/radar'
@@ -149,6 +173,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClassroomRoute: typeof ClassroomRoute
   JoinRoute: typeof JoinRoute
+  ParentRoute: typeof ParentRoute
   TeacherRoute: typeof TeacherRouteWithChildren
 }
 
@@ -175,6 +200,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/parent': {
+      id: '/parent'
+      path: '/parent'
+      fullPath: '/parent'
+      preLoaderRoute: typeof ParentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teacher': {
       id: '/teacher'
       path: '/teacher'
@@ -194,6 +226,13 @@ declare module '@tanstack/react-router' {
       path: '/activities'
       fullPath: '/teacher/activities'
       preLoaderRoute: typeof TeacherActivitiesRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/families': {
+      id: '/teacher/families'
+      path: '/families'
+      fullPath: '/teacher/families'
+      preLoaderRoute: typeof TeacherFamiliesRouteImport
       parentRoute: typeof TeacherRoute
     }
     '/teacher/insights': {
@@ -229,6 +268,7 @@ declare module '@tanstack/react-router' {
 
 interface TeacherRouteChildren {
   TeacherActivitiesRoute: typeof TeacherActivitiesRoute
+  TeacherFamiliesRoute: typeof TeacherFamiliesRoute
   TeacherInsightsRoute: typeof TeacherInsightsRoute
   TeacherLiveRoute: typeof TeacherLiveRoute
   TeacherRadarRoute: typeof TeacherRadarRoute
@@ -238,6 +278,7 @@ interface TeacherRouteChildren {
 
 const TeacherRouteChildren: TeacherRouteChildren = {
   TeacherActivitiesRoute: TeacherActivitiesRoute,
+  TeacherFamiliesRoute: TeacherFamiliesRoute,
   TeacherInsightsRoute: TeacherInsightsRoute,
   TeacherLiveRoute: TeacherLiveRoute,
   TeacherRadarRoute: TeacherRadarRoute,
@@ -252,6 +293,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClassroomRoute: ClassroomRoute,
   JoinRoute: JoinRoute,
+  ParentRoute: ParentRoute,
   TeacherRoute: TeacherRouteWithChildren,
 }
 export const routeTree = rootRouteImport

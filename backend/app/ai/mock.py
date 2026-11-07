@@ -81,6 +81,16 @@ class MockProvider:
         prefix = "[simplified] " if p["simplified"] else ""
         return {"notes": f"{prefix}[{p['target_language']}] {p['notes']}"}
 
+    def _translate_batch(self, p: dict) -> dict:
+        return {"translations": [f"[{p['target_language']}] {t}" for t in p["texts"]]}
+
+    def _parent_tips(self, p: dict) -> dict:
+        return {
+            "summary": f"[mock {p['language']}] The class is learning about fractions.",
+            "tips": ["Cut a roti into 4 and then 8 pieces and compare one piece.", "Share sweets equally."],
+            "conversation_starters": ["Which is bigger, 1/4 or 1/8 of a pizza?"],
+        }
+
     def _explain(self, p: dict) -> dict:
         return {"explanation": f"[mock {p['language']}] {p['concept']} explained simply.",
                 "example": "Sharing a pizza with friends."}
